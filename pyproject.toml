@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "heath"
+version = "0.1.0"
+description = ""
+authors = ["Jonatan Skogsfors <jonatan@skogsfors.net>"]
+
+packages = [
+    { include = "heath" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+click = "^8.0.3"
+tabulate = "^0.8.9"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+black = "^21.12b0"
+
+[tool.poetry.scripts]
+heath = "heath.heath:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
