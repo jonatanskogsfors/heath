@@ -96,8 +96,11 @@ class Day:
                 for shift in self.shifts
             ),
         )
+
+        header = self.date.strftime("%A %-d %B, %Y").capitalize()
+
         original_line = table.splitlines()[0]
-        solid_line = "-" * len(original_line)
+        solid_line = "-" * max(len(original_line), len(header))
         table = table.replace(original_line, solid_line)
         if include_active_day:
             duration = pretty_duration(
@@ -107,13 +110,11 @@ class Day:
         else:
             duration = pretty_duration(self.worked_hours)
 
-        footer = "Totalt:" + duration.rjust(len(solid_line) - 7)
+        footer = f"Totalt:{duration.rjust(len(solid_line) - 7)}"
         report_string = "\n".join(
             (
                 solid_line,
-                self.date.strftime("%A %-d %B, %Y")
-                .capitalize()
-                .center(len(solid_line)),
+                header.center(len(solid_line)),
                 table,
                 footer,
                 solid_line,
