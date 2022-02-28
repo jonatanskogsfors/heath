@@ -163,12 +163,14 @@ def day(
 @click.pass_context
 def projects(ctx):
     ledger: Ledger = ctx.obj["LEDGER"]
+
     width = 20
     print("-" * width)
     print("Projects".center(width))
     print("-" * width)
-    for project in ledger.projects.values():
-        print(project.key + f" - {project.name}" if project.name else "")
+    for project in sorted(ledger.projects.values(), key=lambda p: p.key):
+        project_name = f" - {project.name}" if project.name else ""
+        print(project.key + project_name)
         print(f"  All day:     {('No', 'Yes')[project.all_day]}")
         print(f"  Description: {project.description or ''}")
         print()
