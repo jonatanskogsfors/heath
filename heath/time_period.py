@@ -62,7 +62,7 @@ class TimePeriod:
         table = tabulate(
             [
                 day.report_data(
-                    include_active_day=include_active_day,
+                    include_active_shift=include_active_day,
                     include_comments=include_comments,
                 )
                 for day in self.all_days
@@ -81,7 +81,7 @@ class TimePeriod:
         else:
             duration = pretty_duration(self.worked_hours)
 
-        footer = "Totalt:" + duration.rjust(len(solid_line) - 7)
+        footer = f"Totalt:{duration.rjust(len(solid_line) - 7)}"
         return "\n".join(
             (
                 solid_line,

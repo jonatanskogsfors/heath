@@ -88,19 +88,22 @@ class Shift:
             )
         self._stop_time = stop_time
 
-    def report_data(self, include_active_day: bool = False):
+    def report_data(self, include_active_shift: bool = False):
         start_stop = ""
         if self.start_time:
             start_stop += f"{pretty_time(self.start_time)} -"
+
         if self.stop_time:
             start_stop += f" {pretty_time(self.stop_time)}"
+        elif include_active_shift:
+            start_stop += f" ({pretty_time(datetime.datetime.now())})"
 
         duration_string = ""
-        if not self.all_day and (self.completed or include_active_day):
+        if not self.all_day and (self.completed or include_active_shift):
             duration = (
                 self.duration
                 if self.completed
-                else self.duration_at(datetime.datetime.now())
+                else self.duration_at(datetime.datetime.now().replace(second=0))
             )
             duration_string = pretty_duration(duration)
         return (

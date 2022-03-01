@@ -89,10 +89,12 @@ class Day:
             self._shift_consistency_check(shift)
         self._shifts.append(shift)
 
-    def report(self, include_active_day: bool = False, include_comments: bool = False):
+    def report(
+        self, include_active_shift: bool = False, include_comments: bool = False
+    ):
         table = tabulate(
             (
-                shift.report_data(include_active_day=include_active_day)
+                shift.report_data(include_active_shift=include_active_shift)
                 for shift in self.shifts
             ),
         )
@@ -102,7 +104,7 @@ class Day:
         original_line = table.splitlines()[0]
         solid_line = "-" * max(len(original_line), len(header))
         table = table.replace(original_line, solid_line)
-        if include_active_day:
+        if include_active_shift:
             duration = pretty_duration(
                 self.duration_at(datetime.datetime.now().replace(second=0))
             )
@@ -126,12 +128,12 @@ class Day:
         return report_string
 
     def report_data(
-        self, include_active_day: bool = False, include_comments: bool = False
+        self, include_active_shift: bool = False, include_comments: bool = False
     ):
         date_string = f"{self.date.strftime('%a')} {self.date.day:>2}.".capitalize()
         shifts_string = "\n".join(str(shift) for shift in self.shifts)
         duration_string = ""
-        if not self.all_day and (self.completed or include_active_day):
+        if not self.all_day and (self.completed or include_active_shift):
             duration = (
                 self.worked_hours
                 if self.completed
@@ -165,7 +167,7 @@ class Day:
 
 class NonWorkingDay(Day):
     def report_data(
-        self, include_active_day: bool = False, include_comments: bool = False
+        self, include_active_shift: bool = False, include_comments: bool = False
     ):
         date_string = f"{self.date.strftime('%a')} {self.date.day:>2}.".capitalize()
         return (date_string, f"\x1B[3m{self.comment}\x1B[0m")

@@ -123,9 +123,9 @@ def week(
 @click.argument("year", type=int, required=False)
 @click.option(
     "-a",
-    "--include_active_day",
+    "--include_active_shift",
     is_flag=True,
-    help="Show current duration for any non complete day.",
+    help="Show current duration for any non complete shift.",
 )
 @click.option(
     "-c", "--include-comments", is_flag=True, help="Show any comment for day."
@@ -136,7 +136,7 @@ def day(
     day_number: Optional[int],
     month_number: Optional[int],
     year: Optional[int],
-    include_active_day: bool,
+    include_active_shift: bool,
     include_comments: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
@@ -149,7 +149,7 @@ def day(
         print(
             "\n"
             + day.report(
-                include_active_day=include_active_day,
+                include_active_shift=include_active_shift,
                 include_comments=include_comments,
             )
             + "\n"
@@ -264,6 +264,45 @@ def stop(ctx, stop_time: str, dry_run: bool, verbose: bool):
         datetime.time(*(int(number) for number in stop_time.split(":"))),
     )
     ledger.current_shift.stop(stop_datetime)
+
+    if not dry_run:
+        _write_month_to_disk(
+            ledger, folder, ledger.current_month.year, ledger.current_month.month
+        )
+
+    if verbose:
+        print("\n" + ledger.last_day.report() + "\n")
+
+
+@cli.command(help="Switch to a new shift.")
+@click.argument("project")
+@click.argument("start_time")
+@click.option(
+    "-n",
+    "--dry-run",
+    is_flag=True,
+    help="Do not write change to file but show results.",
+)
+@click.option("-v", "--verbose", is_flag=True)
+@click.pass_context
+def switch(ctx, project: str, start_time: str, dry_run: bool, verbose: bool):
+    ledger: Ledger = ctx.obj["LEDGER"]
+    folder: LedgerFolder = ctx.obj["FOLDER"]
+    verbose |= dry_run
+
+    if ledger.current_shift.completed:
+        sys.exit("There is no ongoing shift to switch from.")
+
+    new_shift = Shift(ledger.new_or_existing_project(project), ledger.last_day.date)
+    switch_datetime = datetime.datetime.combine(
+        new_shift.date,
+        datetime.time(*(int(number) for number in start_time.split(":"))),
+    )
+
+    ledger.current_shift.stop(switch_datetime)
+
+    new_shift.start(switch_datetime)
+    ledger.last_day.add_shift(new_shift)
 
     if not dry_run:
         _write_month_to_disk(
