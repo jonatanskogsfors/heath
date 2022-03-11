@@ -130,6 +130,7 @@ def week(
 @click.option(
     "-c", "--include-comments", is_flag=True, help="Show any comment for day."
 )
+@click.option("-p", "--by-project", is_flag=True, help="Sum worked hours by project.")
 @click.pass_context
 def day(
     ctx,
@@ -138,6 +139,7 @@ def day(
     year: Optional[int],
     include_active_shift: bool,
     include_comments: bool,
+    by_project: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
@@ -151,6 +153,7 @@ def day(
             + day.report(
                 include_active_shift=include_active_shift,
                 include_comments=include_comments,
+                by_project=by_project,
             )
             + "\n"
         )

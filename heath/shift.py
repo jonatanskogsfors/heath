@@ -55,6 +55,13 @@ class Shift:
         else:
             return datetime.timedelta()
 
+    @property
+    def current_duration(self) -> datetime.timedelta:
+        if self.completed:
+            return self.duration
+        else:
+            return self.duration_at(datetime.datetime.now().replace(second=0))
+
     def duration_at(self, read_time: datetime.datetime) -> datetime.timedelta:
         return max(
             read_time - self.start_time - self.lunch_duration, datetime.timedelta()

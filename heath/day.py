@@ -1,4 +1,6 @@
+from collections import defaultdict
 import datetime
+from email.policy import default
 from typing import Optional
 from heath.exceptions import DateInconsistencyError, DayInconsistencyError, DayError
 from heath.shift import Shift
@@ -90,14 +92,29 @@ class Day:
         self._shifts.append(shift)
 
     def report(
-        self, include_active_shift: bool = False, include_comments: bool = False
+        self,
+        include_active_shift: bool = False,
+        include_comments: bool = False,
+        by_project: bool = False,
     ):
-        table = tabulate(
-            (
+        if by_project:
+            projects = defaultdict(datetime.timedelta)
+            for shift in self.shifts:
+                if include_active_shift:
+                    projects[shift.project.key] += shift.current_duration
+                else:
+                    projects[shift.project.key] += shift.duration
+            shift_data = sorted(
+                (project, pretty_duration(duration))
+                for project, duration in projects.items()
+            )
+        else:
+            shift_data = (
                 shift.report_data(include_active_shift=include_active_shift)
                 for shift in self.shifts
-            ),
-        )
+            )
+
+        table = tabulate(shift_data)
 
         header = self.date.strftime("%A %-d %B, %Y").capitalize()
 
