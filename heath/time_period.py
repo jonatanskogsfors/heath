@@ -1,3 +1,4 @@
+from collections import defaultdict
 import datetime
 from typing import Collection, Iterable, Optional
 from heath.day import Day
@@ -58,16 +59,31 @@ class TimePeriod:
         include_active_day: bool = False,
         include_comments: bool = False,
         by_project: bool = False,
+        by_project_total: bool = False,
     ) -> str:
-        table = tabulate(
-            [
+        if by_project_total:
+            projects = defaultdict(datetime.timedelta)
+            day_data = [
+                day.report_data_by_project(include_active_shift=include_active_day)
+                for day in self.all_days
+            ]
+            for day in day_data:
+                for project, duration in day:
+                    projects[project] += duration
+            report_data = [
+                (project, pretty_duration(duration))
+                for project, duration in projects.items()
+            ]
+        else:
+            report_data = [
                 day.report_data(
                     include_active_shift=include_active_day,
                     include_comments=include_comments,
+                    by_project=by_project,
                 )
                 for day in self.all_days
-            ],
-        )
+            ]
+        table = tabulate(report_data)
         if not table:
             return f"No data for {self.title}."
         original_line = table.splitlines()[0]

@@ -144,19 +144,51 @@ class Day:
 
         return report_string
 
+    def report_data_by_project(self, include_active_shift: bool = False):
+
+        projects = defaultdict(datetime.timedelta)
+        for shift in self.shifts:
+            if include_active_shift:
+                projects[shift.project.key] += shift.current_duration
+            else:
+                projects[shift.project.key] += shift.duration
+        return sorted((project, duration) for project, duration in projects.items())
+
     def report_data(
-        self, include_active_shift: bool = False, include_comments: bool = False
+        self,
+        include_active_shift: bool = False,
+        include_comments: bool = False,
+        by_project: bool = False,
     ):
         date_string = f"{self.date.strftime('%a')} {self.date.day:>2}.".capitalize()
-        shifts_string = "\n".join(str(shift) for shift in self.shifts)
+
         duration_string = ""
-        if not self.all_day and (self.completed or include_active_shift):
-            duration = (
-                self.worked_hours
-                if self.completed
-                else self.duration_at(datetime.datetime.now().replace(second=0))
+
+        if by_project:
+            projects = defaultdict(datetime.timedelta)
+            for shift in self.shifts:
+                if include_active_shift:
+                    projects[shift.project.key] += shift.current_duration
+                else:
+                    projects[shift.project.key] += shift.duration
+            shift_data = sorted(
+                (project, duration) for project, duration in projects.items()
             )
-            duration_string = pretty_duration(duration)
+
+            shifts_string = "\n".join([shift[0] for shift in shift_data])
+            duration_string = "\n".join(
+                pretty_duration(shift[1]) for shift in shift_data
+            )
+        else:
+            shifts_string = "\n".join(str(shift) for shift in self.shifts)
+
+            if not self.all_day and (self.completed or include_active_shift):
+                duration = (
+                    self.worked_hours
+                    if self.completed
+                    else self.duration_at(datetime.datetime.now().replace(second=0))
+                )
+                duration_string = pretty_duration(duration)
         return (
             date_string,
             shifts_string,

@@ -90,7 +90,13 @@ def month(
 @click.option(
     "-c", "--include-comments", is_flag=True, help="Show any comments for days."
 )
-@click.option("-p", "--by-project", is_flag=True, help="Group by project.")
+@click.option("-p", "--by-project", is_flag=True, help="Group by project per day.")
+@click.option(
+    "-P",
+    "--by-project-total",
+    is_flag=True,
+    help="Group by project for the whole week.",
+)
 @click.pass_context
 def week(
     ctx,
@@ -99,6 +105,7 @@ def week(
     include_active_day: bool,
     include_comments: bool,
     by_project: bool,
+    by_project_total: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
@@ -112,6 +119,7 @@ def week(
         include_active_day=include_active_day,
         include_comments=include_comments,
         by_project=by_project,
+        by_project_total=by_project_total,
     )
 
     print("\n" + report + "\n")
