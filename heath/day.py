@@ -1,11 +1,12 @@
 from collections import defaultdict
 import datetime
-from email.policy import default
 from typing import Optional
 from heath.exceptions import DateInconsistencyError, DayInconsistencyError, DayError
 from heath.shift import Shift
-from heath.time_utils import pretty_duration
-from tabulate import tabulate
+from heath.time_utils import pretty_duration, pretty_time
+import tabulate
+
+tabulate.PRESERVE_WHITESPACE = True
 
 
 class Day:
@@ -35,12 +36,18 @@ class Day:
         return None
 
     @property
-    def start_time(self) -> datetime.timedelta:
+    def start_time(self) -> datetime.datetime:
         return self.shifts[0].start_time
 
     @property
-    def stop_time(self) -> datetime.timedelta:
+    def stop_time(self) -> datetime.datetime:
         return self.shifts[-1].stop_time
+
+    @property
+    def lunch(self) -> datetime.timedelta:
+        return sum(
+            (shift.lunch_duration for shift in self.shifts), datetime.timedelta()
+        )
 
     @property
     def worked_hours(self) -> datetime.timedelta:
@@ -114,7 +121,7 @@ class Day:
                 for shift in self.shifts
             )
 
-        table = tabulate(shift_data)
+        table = tabulate.tabulate(shift_data)
 
         header = self.date.strftime("%A %-d %B, %Y").capitalize()
 
@@ -195,6 +202,67 @@ class Day:
             duration_string,
             f"# {self.comment}" if self.comment and include_comments else None,
         )
+
+    def overview(self, week_balance: tuple[str, datetime.timedelta] = None):
+        if self.completed:
+            data = [
+                ("Starttid", pretty_time(self.start_time).rjust(5)),
+                ("Lunchlängd", pretty_duration(self.lunch).rjust(5)),
+                ("Sluttid", pretty_time(self.stop_time).rjust(5)),
+                ("Arbetade timmar", pretty_duration(self.worked_hours).rjust(5)),
+            ]
+            if week_balance:
+                data.append(
+                    (
+                        "Veckobalans",
+                        f"{week_balance[0]}{pretty_duration(week_balance[1])}",
+                    )
+                )
+        elif self.shifts:
+            current_time = datetime.datetime.now().replace(second=0, microsecond=0)
+            current_duration = self.duration_at(current_time)
+            time_left = abs(datetime.timedelta(hours=8) - current_duration)
+            sign = "+" if current_duration >= datetime.timedelta(hours=8) else "-"
+            full_day = current_time + time_left
+            data = [
+                ("Starttid", pretty_time(self.start_time).rjust(5)),
+                (
+                    "Lunchlängd",
+                    pretty_duration(self.lunch).rjust(5)
+                    if self.lunch
+                    else "-".center(5),
+                ),
+                (
+                    "Arbetade timmar",
+                    f"{pretty_duration(current_duration):>5} ({sign}{pretty_duration(time_left)})",
+                ),
+                ("8 timmar", pretty_time(full_day).rjust(5)),
+            ]
+            if week_balance:
+                in_phase_with_week = full_day
+                if week_balance[0] == "+":
+                    in_phase_with_week -= week_balance[1]
+                elif week_balance[0] == "-":
+                    in_phase_with_week += week_balance[1]
+                data.append(
+                    ("I fas med veckan", pretty_time(in_phase_with_week).rjust(5))
+                )
+        table = tabulate.tabulate(data)
+        header = self.date.strftime("%A %-d %B, %Y").capitalize()
+
+        original_line = table.splitlines()[0]
+        solid_line = "-" * max(len(original_line), len(header))
+        table = table.replace(original_line, solid_line)
+
+        overview_string = "\n".join(
+            (
+                solid_line,
+                header.center(len(solid_line)),
+                table,
+            )
+        )
+
+        return overview_string
 
     def _shift_consistency_check(self, shift: Shift):
         # (StartA <= EndB) and (EndA >= StartB)

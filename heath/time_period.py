@@ -17,6 +17,10 @@ class TimePeriod:
         return self._days
 
     @property
+    def complete_days(self) -> list[Day]:
+        return [day for day in self.days if day.completed]
+
+    @property
     def all_days(self) -> list[Day]:
         return sorted(
             self.days + list(self._non_working_dates.values()), key=lambda d: d.date
@@ -33,6 +37,17 @@ class TimePeriod:
     @property
     def worked_hours(self) -> datetime.timedelta:
         return sum((day.worked_hours for day in self.days), start=datetime.timedelta())
+
+    @property
+    def balance(self) -> tuple[str, datetime.timedelta]:
+        non_all_day_days = [day for day in self.complete_days if not day.all_day]
+        worked_hours = sum(
+            (day.worked_hours for day in non_all_day_days), datetime.timedelta()
+        )
+        expected_hours = len(non_all_day_days) * datetime.timedelta(hours=8)
+        balance = abs(expected_hours - worked_hours)
+        sign = "+" if self.worked_hours > expected_hours else "-"
+        return sign, balance
 
     def duration_at(self, read_time: datetime.datetime) -> datetime.timedelta:
         return sum(
@@ -71,7 +86,7 @@ class TimePeriod:
                 for project, duration in day:
                     projects[project] += duration
             report_data = [
-                (project, pretty_duration(duration))
+                (project, pretty_duration(duration).rjust(5))
                 for project, duration in projects.items()
             ]
         else:

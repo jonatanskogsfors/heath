@@ -98,10 +98,10 @@ class Shift:
     def report_data(self, include_active_shift: bool = False):
         start_stop = ""
         if self.start_time:
-            start_stop += f"{pretty_time(self.start_time)} -"
+            start_stop += f"{pretty_time(self.start_time).rjust(5)} -"
 
         if self.stop_time:
-            start_stop += f" {pretty_time(self.stop_time)}"
+            start_stop += pretty_time(self.stop_time).rjust(6)
         elif include_active_shift:
             start_stop += f" ({pretty_time(datetime.datetime.now())})"
 

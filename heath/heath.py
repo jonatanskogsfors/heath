@@ -5,12 +5,14 @@ from pathlib import Path
 from typing import Optional
 
 import click
+from tabulate import tabulate
 
 from heath.day import Day
 from heath.exceptions import ProjectError
 from heath.folder import LedgerFolder
 from heath.ledger import Ledger
 from heath.shift import Shift
+from heath.time_utils import pretty_time
 
 
 @click.group()
@@ -22,8 +24,7 @@ def cli(ctx, folder: Path, validate: bool):
         folder = Path.cwd()
     ledger_folder = LedgerFolder(folder)
     if validate:
-        print(ledger_folder)
-        print()
+        print(ledger_folder + "\n")
 
     if not ledger_folder.valid:
         sys.exit("Ledger folder not valid")
@@ -69,13 +70,13 @@ def month(
         ledger.get_month(month_number, year) if month_number else ledger.current_month
     )
 
-    print()
     print(
-        month.report(
+        "\n"
+        + month.report(
             include_active_day=include_active_day, include_comments=include_comments
         )
+        + "\n"
     )
-    print()
 
 
 @cli.command(help="Show ledger for week.")
@@ -139,6 +140,7 @@ def week(
     "-c", "--include-comments", is_flag=True, help="Show any comment for day."
 )
 @click.option("-p", "--by-project", is_flag=True, help="Sum worked hours by project.")
+@click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
 @click.pass_context
 def day(
     ctx,
@@ -148,6 +150,7 @@ def day(
     include_active_shift: bool,
     include_comments: bool,
     by_project: bool,
+    overview: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
@@ -156,15 +159,15 @@ def day(
         if day_number
         else ledger.today
     ):
-        print(
-            "\n"
-            + day.report(
+        if overview:
+            day_string = day.overview(week_balance=ledger.current_week.balance)
+        else:
+            day_string = day.report(
                 include_active_shift=include_active_shift,
                 include_comments=include_comments,
                 by_project=by_project,
             )
-            + "\n"
-        )
+        print("\n" + day_string + "\n")
 
     else:
         print("No information for day.")
@@ -174,17 +177,23 @@ def day(
 @click.pass_context
 def projects(ctx):
     ledger: Ledger = ctx.obj["LEDGER"]
-
-    width = 20
-    print("-" * width)
-    print("Projects".center(width))
-    print("-" * width)
-    for project in sorted(ledger.projects.values(), key=lambda p: p.key):
-        project_name = f" - {project.name}" if project.name else ""
-        print(project.key + project_name)
-        print(f"  All day:     {('No', 'Yes')[project.all_day]}")
-        print(f"  Description: {project.description or ''}")
-        print()
+    projects_data = [
+        (
+            project.key,
+            project.name,
+            ("No", "Yes")[project.all_day],
+            project.description,
+        )
+        for project in sorted(ledger.projects.values(), key=lambda p: p.key)
+    ]
+    print(
+        "\n"
+        + tabulate(
+            projects_data,
+            headers=("Projekt", "Rapporteras som", "Heldag", "Beskrivning"),
+        )
+        + "\n"
+    )
 
 
 @cli.command(help="Start a new shift for a project.")
