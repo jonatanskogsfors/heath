@@ -27,7 +27,7 @@ import datetime
         (datetime.timedelta(days=1, seconds=1), "24:00:01"),
     ),
 )
-def test_various_durations(given_duration: datetime.timedelta, expected_string: str):
+def test_pretty_duration(given_duration: datetime.timedelta, expected_string: str):
     assert time_utils.pretty_duration(given_duration) == expected_string
 
 
@@ -43,5 +43,31 @@ def test_various_durations(given_duration: datetime.timedelta, expected_string: 
         (datetime.time(13, 37), "13:37"),
     ),
 )
-def test_various_times(given_time: datetime.time, expected_string: str):
+def test_pretty_time(given_time: datetime.time, expected_string: str):
     assert time_utils.pretty_time(given_time) == expected_string
+
+
+@pytest.mark.parametrize(
+    "given_duration, expected_string",
+    (
+        (None, ""),
+        (datetime.timedelta(), "0:00"),
+        (datetime.timedelta(seconds=1), "0:00"),
+        (datetime.timedelta(seconds=59), "0:01"),
+        (datetime.timedelta(seconds=90), "0:02"),
+        (datetime.timedelta(minutes=13, seconds=37), "0:14"),
+        (datetime.timedelta(hours=1, minutes=1, seconds=1), "1:01"),
+        (datetime.timedelta(hours=13, minutes=33, seconds=37), "13:34"),
+        (datetime.timedelta(hours=1, minutes=59, seconds=31), "2:00"),
+        (datetime.timedelta(hours=1, minutes=59, seconds=30), "2:00"),
+        (datetime.timedelta(hours=1, minutes=59, seconds=29), "1:59"),
+        (datetime.timedelta(hours=23, minutes=59, seconds=31), "24:00"),
+    ),
+)
+def test_pretty_duration_with_rounding(
+    given_duration: datetime.timedelta, expected_string: str
+):
+    assert (
+        time_utils.pretty_duration(given_duration, round_seconds=True)
+        == expected_string
+    )

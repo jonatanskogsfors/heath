@@ -3,7 +3,8 @@ import datetime
 from typing import Collection, Iterable, Optional
 from heath.day import Day
 from tabulate import tabulate
-from heath.time_utils import pretty_duration
+from heath.time_utils import pretty_duration, time_to_seconds
+import statistics
 
 
 class TimePeriod:
@@ -122,6 +123,79 @@ class TimePeriod:
                 solid_line,
             )
         )
+
+    def statistics_report(self):
+        table = tabulate(self.statistics(), headers=("", "Medel", "Median", "SD"))
+        original_line = table.splitlines()[1]
+        solid_line = "-" * len(original_line)
+        return "\n".join(
+            (
+                solid_line,
+                self.title.center(len(solid_line)),
+                solid_line,
+                table,
+                solid_line,
+            )
+        )
+
+    def statistics(self):
+        start_stats = mean_median_std(
+            [
+                time_to_seconds(day.start_time.time())
+                for day in self.days
+                if not day.all_day
+            ]
+        )
+
+        stop_stats = mean_median_std(
+            [
+                time_to_seconds(day.stop_time.time())
+                for day in self.days
+                if not day.all_day and day.stop_time
+            ]
+        )
+
+        lunch_stats = mean_median_std(
+            [day.lunch.total_seconds() for day in self.days if not day.all_day and day.lunch]
+        )
+
+        return (
+            (
+                "Start",
+                *(
+                    pretty_duration(stat, round_seconds=True).rjust(5)
+                    for stat in start_stats
+                ),
+            ),
+            (
+                "Slut",
+                *(
+                    pretty_duration(stat, round_seconds=True).rjust(5)
+                    for stat in stop_stats
+                ),
+            ),
+            (
+                "Lunch",
+                *(
+                    pretty_duration(stat, round_seconds=True).rjust(5)
+                    for stat in lunch_stats
+                ),
+            ),
+        )
+
+
+def mean_median_std(
+    timepoints: list[float],
+) -> tuple[datetime.timedelta, datetime.timedelta, datetime.timedelta]:
+    mean_time = statistics.mean(timepoints)
+    median_time = statistics.median(timepoints)
+    standard_deviation = statistics.stdev(timepoints) if len(timepoints) > 2 else None
+
+    return (
+        datetime.timedelta(seconds=mean_time),
+        datetime.timedelta(seconds=median_time),
+        None if standard_deviation is None else datetime.timedelta(seconds=standard_deviation)
+    )
 
 
 class CustomTimePeriod(TimePeriod):

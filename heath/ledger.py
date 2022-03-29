@@ -44,7 +44,6 @@ class Ledger:
     @property
     def current_week(self) -> CustomTimePeriod:
         today = datetime.date.today()
-        today.isocalendar().week
         return self.get_week(today.isocalendar().week, today.year)
 
     @property
@@ -81,8 +80,8 @@ class Ledger:
     def get_week(self, week_number, year=None) -> CustomTimePeriod:
         year = year or datetime.date.today().year
         week_string = f"{year}-{week_number:02}"
-        monday = datetime.datetime.strptime(week_string + "-1", "%Y-%W-%u")
-        sunday = datetime.datetime.strptime(week_string + "-7", "%Y-%W-%u")
+        monday = datetime.datetime.strptime(f"{week_string}-1", "%Y-%W-%u")
+        sunday = datetime.datetime.strptime(f"{week_string}-7", "%Y-%W-%u")
 
         title = f"Vecka {week_number}, {year}"
 
@@ -93,7 +92,7 @@ class Ledger:
             title=title,
         )
 
-    def get_month(self, month_number, year=None) -> CustomTimePeriod:
+    def get_month(self, month_number, year=None) -> Month | None:
         year = year or datetime.date.today().year
         month_number = month_number or datetime.date.today().month
 

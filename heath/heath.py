@@ -12,7 +12,7 @@ from heath.exceptions import ProjectError
 from heath.folder import LedgerFolder
 from heath.ledger import Ledger
 from heath.shift import Shift
-from heath.time_utils import pretty_time
+from heath.time_period import CustomTimePeriod
 
 
 @click.group()
@@ -56,6 +56,7 @@ def cli(ctx, folder: Path, validate: bool):
 @click.option(
     "-c", "--include-comments", is_flag=True, help="Show any comments for days."
 )
+@click.option("-s", "--stats", is_flag=True, help="Show statistics.")
 @click.pass_context
 def month(
     ctx,
@@ -63,6 +64,7 @@ def month(
     year: Optional[int],
     include_active_day: bool,
     include_comments: bool,
+    stats: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
@@ -70,13 +72,13 @@ def month(
         ledger.get_month(month_number, year) if month_number else ledger.current_month
     )
 
-    print(
-        "\n"
-        + month.report(
+    if stats:
+        report = month.statistics_report()
+    else:
+        report = month.report(
             include_active_day=include_active_day, include_comments=include_comments
         )
-        + "\n"
-    )
+    print("\n" + report + "\n")
 
 
 @cli.command(help="Show ledger for week.")
@@ -98,6 +100,7 @@ def month(
     is_flag=True,
     help="Group by project for the whole week.",
 )
+@click.option("-s", "--stats", is_flag=True, help="Show statistics.")
 @click.pass_context
 def week(
     ctx,
@@ -107,6 +110,7 @@ def week(
     include_comments: bool,
     by_project: bool,
     by_project_total: bool,
+    stats: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
@@ -116,12 +120,15 @@ def week(
         else ledger.current_week
     )
 
-    report = week.report(
-        include_active_day=include_active_day,
-        include_comments=include_comments,
-        by_project=by_project,
-        by_project_total=by_project_total,
-    )
+    if stats:
+        report = week.statistics_report()
+    else:
+        report = week.report(
+            include_active_day=include_active_day,
+            include_comments=include_comments,
+            by_project=by_project,
+            by_project_total=by_project_total,
+        )
 
     print("\n" + report + "\n")
 
@@ -160,7 +167,16 @@ def day(
         else ledger.today
     ):
         if overview:
-            day_string = day.overview(week_balance=ledger.current_week.balance)
+            week_year, week_number, _ = day.date.isocalendar()
+            days_in_week = [
+                d
+                for d in ledger.get_week(week_number, week_year).all_days
+                if d.date <= day.date
+            ]
+            partial_week = CustomTimePeriod(
+                days_in_week[0].date, days_in_week[-1].date, days_in_week
+            )
+            day_string = day.overview(week_balance=partial_week.balance)
         else:
             day_string = day.report(
                 include_active_shift=include_active_shift,

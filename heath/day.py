@@ -254,15 +254,13 @@ class Day:
         solid_line = "-" * max(len(original_line), len(header))
         table = table.replace(original_line, solid_line)
 
-        overview_string = "\n".join(
+        return "\n".join(
             (
                 solid_line,
                 header.center(len(solid_line)),
                 table,
             )
         )
-
-        return overview_string
 
     def _shift_consistency_check(self, shift: Shift):
         # (StartA <= EndB) and (EndA >= StartB)

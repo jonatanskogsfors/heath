@@ -110,7 +110,7 @@ def test_added_shift_must_have_same_date_as_day():
         given_day.add_shift(given_shift)
 
 
-def test_added_shift_cant_overlap_whith_previous_shift():
+def test_added_shift_cant_overlap_with_previous_shift():
     # Given a project
     given_project = Project("AnyProject")
 
@@ -134,7 +134,7 @@ def test_added_shift_cant_overlap_whith_previous_shift():
     # Given the first shift is added to the day
     given_day.add_shift(given_first_shift)
 
-    # When adding the second shify to the day
+    # When adding the second shift to the day
     # Then the shift raises
     with pytest.raises(DayInconsistencyError):
         given_day.add_shift(given_second_shift)
