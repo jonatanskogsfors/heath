@@ -1,7 +1,7 @@
 from collections import defaultdict
 import datetime
 from typing import Collection, Iterable, Optional
-from heath.day import Day
+from heath.day import Day, NonWorkingDay
 from tabulate import tabulate
 from heath.time_utils import pretty_duration, time_to_seconds
 import statistics
@@ -71,11 +71,11 @@ class TimePeriod:
         return self._days.__iter__()
 
     def report(
-        self,
-        include_active_day: bool = False,
-        include_comments: bool = False,
-        by_project: bool = False,
-        by_project_total: bool = False,
+            self,
+            include_active_day: bool = False,
+            include_comments: bool = False,
+            by_project: bool = False,
+            by_project_total: bool = False,
     ) -> str:
         if by_project_total:
             projects = defaultdict(datetime.timedelta)
@@ -87,7 +87,7 @@ class TimePeriod:
                 for project, duration in day:
                     projects[project] += duration
             report_data = [
-                (project, pretty_duration(duration).rjust(5))
+                (project, pretty_duration(duration).rjust(6))
                 for project, duration in projects.items()
             ]
         else:
@@ -143,7 +143,7 @@ class TimePeriod:
             [
                 time_to_seconds(day.start_time.time())
                 for day in self.days
-                if not day.all_day
+                if day.start_time
             ]
         )
 
@@ -151,12 +151,12 @@ class TimePeriod:
             [
                 time_to_seconds(day.stop_time.time())
                 for day in self.days
-                if not day.all_day and day.stop_time
+                if day.stop_time
             ]
         )
 
         lunch_stats = mean_median_std(
-            [day.lunch.total_seconds() for day in self.days if not day.all_day and day.lunch]
+            [day.lunch.total_seconds() for day in self.days if day.lunch]
         )
 
         return (
@@ -185,26 +185,26 @@ class TimePeriod:
 
 
 def mean_median_std(
-    timepoints: list[float],
+        timepoints: list[float],
 ) -> tuple[datetime.timedelta, datetime.timedelta, datetime.timedelta]:
-    mean_time = statistics.mean(timepoints)
-    median_time = statistics.median(timepoints)
-    standard_deviation = statistics.stdev(timepoints) if len(timepoints) > 2 else None
+    mean_time = statistics.mean(timepoints) if len(timepoints) > 1 else None
+    median_time = statistics.median(timepoints) if len(timepoints) > 1 else None
+    standard_deviation = statistics.stdev(timepoints) if len(timepoints) > 1 else None
 
     return (
-        datetime.timedelta(seconds=mean_time),
-        datetime.timedelta(seconds=median_time),
+        None if mean_time is None else datetime.timedelta(seconds=mean_time),
+        None if median_time is None else datetime.timedelta(seconds=median_time),
         None if standard_deviation is None else datetime.timedelta(seconds=standard_deviation)
     )
 
 
 class CustomTimePeriod(TimePeriod):
     def __init__(
-        self,
-        first_date: datetime.date,
-        last_date: datetime.date,
-        days: Collection[Day],
-        title="",
+            self,
+            first_date: datetime.date,
+            last_date: datetime.date,
+            days: Collection[Day],
+            title="",
     ):
         super().__init__()
         self.first_date = first_date
@@ -212,4 +212,7 @@ class CustomTimePeriod(TimePeriod):
         self.title = title
         for day in days:
             if self.first_date <= day.date <= self.last_date:
-                self._days.append(day)
+                if isinstance(day, NonWorkingDay):
+                    self._non_working_dates[day.date] = day
+                else:
+                    self._days.append(day)

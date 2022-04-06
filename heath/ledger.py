@@ -38,6 +38,11 @@ class Ledger:
         return self._projects
 
     @property
+    def current_year(self) -> CustomTimePeriod:
+        today = datetime.date.today()
+        return self.get_year(today.year)
+
+    @property
     def current_month(self) -> Month:
         return self.months[-1]
 
@@ -92,6 +97,14 @@ class Ledger:
             title=title,
         )
 
+    def get_custom_time_period(self, start_date: datetime.date, end_date: datetime.date):
+        return CustomTimePeriod(
+            start_date,
+            end_date,
+            [day for month in self.months for day in month.all_days],
+            title=f"{start_date.isoformat()} - {end_date.isoformat()}",
+        )
+
     def get_month(self, month_number, year=None) -> Month | None:
         year = year or datetime.date.today().year
         month_number = month_number or datetime.date.today().month
@@ -102,6 +115,19 @@ class Ledger:
             if month.year == year and month.month == month_number
         ]
         return month[0] if month else None
+
+    def get_year(self, year) -> CustomTimePeriod | None:
+        year = year or datetime.date.today().year
+        title = str(year)
+        new_years_day = datetime.date(year, 1, 1)
+        new_years_eve = datetime.date(year, 12, 31)
+
+        return CustomTimePeriod(
+            new_years_day,
+            new_years_eve,
+            [day for month in self.months for day in month.all_days],
+            title=title,
+        )
 
     @property
     def non_working_dates(self) -> dict[int, dict[datetime.date, str]]:
@@ -187,9 +213,9 @@ class Ledger:
 
         non_working_dates = {}
         for date_string, description in (
-            line.split(":")
-            for line in year_string_without_comments.splitlines()
-            if line.strip()
+                line.split(":")
+                for line in year_string_without_comments.splitlines()
+                if line.strip()
         ):
             date = datetime.date.fromisoformat(date_string.strip())
             if date.year != year:
