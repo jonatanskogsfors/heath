@@ -94,6 +94,14 @@ class LedgerFolder:
         return self._months
 
     @property
+    def next_month(self) -> MonthFile:
+        last_month = self.ordered_months[-1]
+        next_month_number = last_month.month % 12 + 1
+        next_year_number = last_month.year + (last_month.month == 12)
+        next_month_path = last_month.path.parent / f"{next_year_number}-{next_month_number}.txt"
+        return MonthFile(next_month_path)
+
+    @property
     def ordered_months(self) -> list[MonthFile]:
         return sorted(self.months.values(), key=lambda m: (m.year, m.month))
 

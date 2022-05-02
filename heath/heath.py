@@ -541,7 +541,7 @@ def _write_month_to_disk(
         if serialized_month != month_file.content:
             month_file.write(serialized_month)
     else:
-        sys.exit("Could not find month file for " f"{year}-{month_number:02}.")
+        folder.next_month.write(serialized_month)
 
 
 def main():
