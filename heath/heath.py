@@ -137,6 +137,7 @@ def month(
     help="Group by project for the whole week.",
 )
 @click.option("-s", "--stats", is_flag=True, help="Show statistics.")
+@click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
 @click.pass_context
 def interval(
         ctx,
@@ -147,6 +148,7 @@ def interval(
         by_project: bool,
         by_project_total: bool,
         stats: bool,
+        overview: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
@@ -155,6 +157,8 @@ def interval(
 
     if stats:
         report = time_period.statistics_report()
+    elif overview:
+        report = time_period.overview()
     else:
         report = time_period.report(
             include_active_day=include_active_day,
@@ -186,6 +190,7 @@ def interval(
     help="Group by project for the whole week.",
 )
 @click.option("-s", "--stats", is_flag=True, help="Show statistics.")
+@click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
 @click.pass_context
 def week(
         ctx,
@@ -196,6 +201,7 @@ def week(
         by_project: bool,
         by_project_total: bool,
         stats: bool,
+        overview: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
@@ -207,6 +213,8 @@ def week(
 
     if stats:
         report = week.statistics_report()
+    elif overview:
+        report = week.overview()
     else:
         report = week.report(
             include_active_day=include_active_day,

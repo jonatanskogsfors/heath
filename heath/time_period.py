@@ -183,6 +183,24 @@ class TimePeriod:
             ),
         )
 
+    def overview(self):
+        sign, balance = self.balance
+        table = tabulate(
+            (("Arbetade timmar", pretty_duration(self.worked_hours).rjust(6)),
+             ("Balans", f"{sign if balance else ''}{pretty_duration(balance)}".rjust(6))),
+
+        )
+        original_line = table.splitlines()[0]
+        solid_line = "-" * len(original_line)
+        table = table.replace(original_line, solid_line)
+        return "\n".join(
+            (
+                solid_line,
+                self.title.center(len(solid_line)),
+                table,
+            )
+        )
+
 
 def mean_median_std(
         timepoints: list[float],
