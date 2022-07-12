@@ -59,6 +59,7 @@ def cli(ctx, folder: Path, validate: bool):
     help="Group by project for the whole week.",
 )
 @click.option("-s", "--stats", is_flag=True, help="Show statistics.")
+@click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
 @click.pass_context
 def year(
         ctx,
@@ -66,6 +67,7 @@ def year(
         include_active_day: bool,
         by_project_total: bool,
         stats: bool,
+        overview: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
@@ -75,6 +77,8 @@ def year(
 
     if stats:
         report = year_ledger.statistics_report()
+    elif overview:
+        report = year_ledger.overview()
     else:
         report = year_ledger.report(include_active_day=include_active_day, by_project_total=by_project_total)
     print("\n" + report + "\n")
@@ -93,6 +97,7 @@ def year(
     "-c", "--include-comments", is_flag=True, help="Show any comments for days."
 )
 @click.option("-s", "--stats", is_flag=True, help="Show statistics.")
+@click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
 @click.pass_context
 def month(
         ctx,
@@ -101,17 +106,20 @@ def month(
         include_active_day: bool,
         include_comments: bool,
         stats: bool,
+        overview: bool
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
-    month = (
+    month_ledger = (
         ledger.get_month(month_number, year) if month_number else ledger.current_month
     )
 
     if stats:
-        report = month.statistics_report()
+        report = month_ledger.statistics_report()
+    elif overview:
+        report = month_ledger.overview()
     else:
-        report = month.report(
+        report = month_ledger.report(
             include_active_day=include_active_day, include_comments=include_comments
         )
     print("\n" + report + "\n")
@@ -152,15 +160,15 @@ def interval(
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
-    time_period = ledger.get_custom_time_period(datetime.datetime.strptime(start_date, "%Y-%m-%d").date(),
-                                                datetime.datetime.strptime(end_date, "%Y-%m-%d").date())
+    interval_ledger = ledger.get_custom_time_period(datetime.datetime.strptime(start_date, "%Y-%m-%d").date(),
+                                                    datetime.datetime.strptime(end_date, "%Y-%m-%d").date())
 
     if stats:
-        report = time_period.statistics_report()
+        report = interval_ledger.statistics_report()
     elif overview:
-        report = time_period.overview()
+        report = interval_ledger.overview()
     else:
-        report = time_period.report(
+        report = interval_ledger.report(
             include_active_day=include_active_day,
             include_comments=include_comments,
             by_project=by_project,
@@ -205,18 +213,18 @@ def week(
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
-    week = (
+    week_ledger = (
         ledger.get_week(week_number, year)
         if week_number is not None
         else ledger.current_week
     )
 
     if stats:
-        report = week.statistics_report()
+        report = week_ledger.statistics_report()
     elif overview:
-        report = week.overview()
+        report = week_ledger.overview()
     else:
-        report = week.report(
+        report = week_ledger.report(
             include_active_day=include_active_day,
             include_comments=include_comments,
             by_project=by_project,
