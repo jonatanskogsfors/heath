@@ -17,6 +17,9 @@ class FileObject:
     def __bool__(self):
         return self.path.exists()
 
+    def __str__(self):
+        return str(self.path)
+
 
 class YearFile(FileObject):
     PATTERN = re.compile("(\d{4})\.txt")

@@ -24,7 +24,7 @@ def cli(ctx, folder: Path, validate: bool):
         folder = Path.cwd()
     ledger_folder = LedgerFolder(folder)
     if validate:
-        print(ledger_folder + "\n")
+        print(str(ledger_folder) + "\n")
 
     if not ledger_folder.valid:
         sys.exit("Ledger folder not valid")
