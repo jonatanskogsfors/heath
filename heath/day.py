@@ -221,9 +221,19 @@ class Day:
         elif self.shifts:
             current_time = datetime.datetime.now().replace(second=0, microsecond=0)
             current_duration = self.duration_at(current_time)
-            time_left = abs(datetime.timedelta(hours=8) - current_duration)
-            sign = "+" if current_duration >= datetime.timedelta(hours=8) else "-"
-            full_day = current_time + time_left
+            eight_hours = datetime.timedelta(hours=8)
+            day_is_finished = current_duration >= eight_hours
+
+            # Beware of negative timedeltas
+            worked_hours_difference = abs(eight_hours - current_duration)
+            sign = "+" if day_is_finished else "-"
+
+            day_complete_at = (
+                current_time - worked_hours_difference
+                if day_is_finished
+                else current_time + worked_hours_difference
+            )
+
             data = [
                 ("Starttid", pretty_time(self.start_time).rjust(5)),
                 (
@@ -234,12 +244,13 @@ class Day:
                 ),
                 (
                     "Arbetade timmar",
-                    f"{pretty_duration(current_duration):>5} ({sign}{pretty_duration(time_left)})",
+                    f"{pretty_duration(current_duration):>5} "
+                    f"({sign}{pretty_duration(worked_hours_difference)})",
                 ),
-                ("8 timmar", pretty_time(full_day).rjust(5)),
+                ("8 timmar", pretty_time(day_complete_at).rjust(5)),
             ]
             if week_balance:
-                in_phase_with_week = full_day
+                in_phase_with_week = day_complete_at
                 if week_balance[0] == "+":
                     in_phase_with_week -= week_balance[1]
                 elif week_balance[0] == "-":

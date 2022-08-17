@@ -71,16 +71,16 @@ def year(
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
-    year_ledger = (
-        ledger.get_year(year) if year else ledger.current_year
-    )
+    year_ledger = ledger.get_year(year) if year else ledger.current_year
 
     if stats:
         report = year_ledger.statistics_report()
     elif overview:
         report = year_ledger.overview()
     else:
-        report = year_ledger.report(include_active_day=include_active_day, by_project_total=by_project_total)
+        report = year_ledger.report(
+            include_active_day=include_active_day, by_project_total=by_project_total
+        )
     print("\n" + report + "\n")
 
 
@@ -106,7 +106,7 @@ def month(
         include_active_day: bool,
         include_comments: bool,
         stats: bool,
-        overview: bool
+        overview: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
@@ -160,8 +160,10 @@ def interval(
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
-    interval_ledger = ledger.get_custom_time_period(datetime.datetime.strptime(start_date, "%Y-%m-%d").date(),
-                                                    datetime.datetime.strptime(end_date, "%Y-%m-%d").date())
+    interval_ledger = ledger.get_custom_time_period(
+        datetime.datetime.strptime(start_date, "%Y-%m-%d").date(),
+        datetime.datetime.strptime(end_date, "%Y-%m-%d").date(),
+    )
 
     if stats:
         report = interval_ledger.statistics_report()
@@ -237,7 +239,7 @@ def week(
 @cli.command(help="Show ledger for day.")
 @click.argument("day_number", type=click.IntRange(1, 31), required=False)
 @click.argument("month_number", type=click.IntRange(1, 12), required=False)
-@click.argument("year", type=int, required=False)
+@click.argument("year_number", type=int, required=False)
 @click.option(
     "-a",
     "--include_active_shift",
@@ -254,7 +256,7 @@ def day(
         ctx,
         day_number: Optional[int],
         month_number: Optional[int],
-        year: Optional[int],
+        year_number: Optional[int],
         include_active_shift: bool,
         include_comments: bool,
         by_project: bool,
@@ -263,23 +265,23 @@ def day(
     ledger: Ledger = ctx.obj["LEDGER"]
 
     if (
-            day := ledger.get_day(day_number, month_number, year)
+            day_ledger := ledger.get_day(day_number, month_number, year_number)
             if day_number
             else ledger.today
     ):
         if overview:
-            week_year, week_number, _ = day.date.isocalendar()
+            week_year, week_number, _ = day_ledger.date.isocalendar()
             days_in_week = [
                 d
                 for d in ledger.get_week(week_number, week_year).all_days
-                if d.date <= day.date
+                if d.date <= day_ledger.date
             ]
             partial_week = CustomTimePeriod(
                 days_in_week[0].date, days_in_week[-1].date, days_in_week
             )
-            day_string = day.overview(week_balance=partial_week.balance)
+            day_string = day_ledger.overview(week_balance=partial_week.balance)
         else:
-            day_string = day.report(
+            day_string = day_ledger.report(
                 include_active_shift=include_active_shift,
                 include_comments=include_comments,
                 by_project=by_project,

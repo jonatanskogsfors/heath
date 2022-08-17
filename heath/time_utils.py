@@ -16,7 +16,7 @@ def pretty_duration(delta: datetime.timedelta, round_seconds: bool = False):
     return f"{hours}:{minutes:02}" + (f":{seconds:02}" if seconds else "")
 
 
-def pretty_time(time: datetime.time, italic=False):
+def pretty_time(time: datetime.time | datetime.datetime, italic=False):
     return time.strftime("%-H:%M") if time is not None else ""
 
 
