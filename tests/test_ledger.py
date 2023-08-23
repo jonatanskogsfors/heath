@@ -3,13 +3,12 @@ from pydoc import describe
 from textwrap import dedent
 
 import pytest
-from heath.day import Day
 
-from heath.exceptions import DateInconsistencyError, MonthDateInconsistencyError
+from heath import exceptions
 from heath.ledger import Ledger
 from heath.month import Month
 from heath.project import Project
-from tests.test_utilities import given_completed_day_for_date
+from tests import test_utilities
 
 
 def test_day_with_no_shifts_can_be_parsed_from_string():
@@ -718,7 +717,7 @@ def test_year_file_with_out_of_year_dates_raises():
 
     # When the string is parsed
     # Then the ledger raises
-    with pytest.raises(DateInconsistencyError):
+    with pytest.raises(exceptions.DateInconsistencyError):
         given_ledger.parse_year(given_year_2, given_year_string)
 
 
@@ -735,7 +734,7 @@ def test_adding_non_working_days_when_corresponding_month_allready_are_added_rai
 
     # When adding a non working date for the month to the ledger
     # Then the ledger raises
-    with pytest.raises(MonthDateInconsistencyError):
+    with pytest.raises(exceptions.MonthDateInconsistencyError):
         given_ledger.add_non_working_date(date(given_year, given_month, 6), "Epiphany")
 
 
@@ -861,7 +860,7 @@ def test_ledger_is_aware_of_next_work_date():
     assert given_ledger.next_work_date == first_work_date
 
     # When adding a day for that date
-    given_ledger.add_day(given_completed_day_for_date(first_work_date))
+    given_ledger.add_day(test_utilities.given_completed_day_for_date(first_work_date))
 
     # Then the next working date is updated
     second_work_date = given_ledger.next_work_date
@@ -872,8 +871,8 @@ def test_ledger_will_increase_next_work_day_past_end_of_month():
     number_of_workdays_in_january_2022 = 21
     last_workday_in_january_2022 = date(2022, 1, 31)
 
-    given_ledger = Ledger()
     # Given a ledger
+    given_ledger = Ledger()
 
     # Given a month added to the ledger
     given_month = Month(2022, 1)
@@ -884,11 +883,15 @@ def test_ledger_will_increase_next_work_day_past_end_of_month():
 
     # Given the days beeing continuosly added from the next work date
     for _ in range(number_of_workdays_in_january_2022 - 1):
-        given_ledger.add_day(given_completed_day_for_date(given_ledger.next_work_date))
+        given_ledger.add_day(
+            test_utilities.given_completed_day_for_date(given_ledger.next_work_date)
+        )
 
     # When the month runs out of work dates
     assert given_ledger.next_work_date == last_workday_in_january_2022
-    given_ledger.add_day(given_completed_day_for_date(given_ledger.next_work_date))
+    given_ledger.add_day(
+        test_utilities.given_completed_day_for_date(given_ledger.next_work_date)
+    )
 
     # Then the next working date will be in a new month
     assert given_ledger.next_work_date.month != given_month.month
@@ -897,8 +900,54 @@ def test_ledger_will_increase_next_work_day_past_end_of_month():
     assert given_ledger.current_month is given_month
 
     # And after adding that day, the current month is not the given month
-    given_ledger.add_day(given_completed_day_for_date(given_ledger.next_work_date))
+    given_ledger.add_day(
+        test_utilities.given_completed_day_for_date(given_ledger.next_work_date)
+    )
     assert given_ledger.current_month is not given_month
+
+
+def test_first_month_can_start_in_the_middle_of_a_month():
+    # Given a ledger
+    given_ledger = Ledger()
+
+    # Given a month added to the ledger
+    given_month = Month(2023, 8)
+    given_ledger.add_month(given_month)
+
+    # Given a day in the middle of the month
+    given_day = test_utilities.given_completed_day_for_date(
+        date(given_month.year, given_month.month, 21)
+    )
+    assert given_day.date > given_ledger.next_work_date
+
+    # When adding the date to the ledger
+    given_ledger.add_day(given_day)
+
+    # Then the day is accepted
+    assert given_ledger.current_month.days[0] is given_day
+
+    # And the next working day is advanced correspondingly
+    expected_next_working_date = given_day.date.replace(day=given_day.date.day + 1)
+    assert given_ledger.next_work_date == expected_next_working_date
+
+
+def test_subsequent_months_can_not_start_in_the_middle_of_a_month():
+    # Given a ledger
+    given_ledger = Ledger()
+
+    # Given a completed month added to the ledger
+    given_month = test_utilities.given_completed_month(2023, 8)
+    given_ledger.add_month(given_month)
+    assert given_ledger.next_work_date.month == given_month.month + 1
+
+    # Given a day in the middle of next month
+    given_date = date(given_month.year, given_month.month + 1, 15)
+    given_day = test_utilities.given_completed_day_for_date(given_date)
+
+    # When adding the day to the ledger
+    # Then the ledger raises
+    with pytest.raises(exceptions.MonthDateInconsistencyError):
+        given_ledger.add_day(given_day)
 
 
 # def test_bad_month_file_raises()
