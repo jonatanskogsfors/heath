@@ -72,7 +72,7 @@ class Day:
     @property
     def completed(self):
         return self.all_day or (
-                self.shifts and all(shift.completed for shift in self.shifts)
+            self.shifts and all(shift.completed for shift in self.shifts)
         )
 
     def duration_at(self, read_time: datetime.datetime) -> datetime.timedelta:
@@ -99,10 +99,10 @@ class Day:
         self._shifts.append(shift)
 
     def report(
-            self,
-            include_active_shift: bool = False,
-            include_comments: bool = False,
-            by_project: bool = False,
+        self,
+        include_active_shift: bool = False,
+        include_comments: bool = False,
+        by_project: bool = False,
     ):
         if by_project:
             projects = defaultdict(datetime.timedelta)
@@ -162,10 +162,10 @@ class Day:
         return sorted((project, duration) for project, duration in projects.items())
 
     def report_data(
-            self,
-            include_active_shift: bool = False,
-            include_comments: bool = False,
-            by_project: bool = False,
+        self,
+        include_active_shift: bool = False,
+        include_comments: bool = False,
+        by_project: bool = False,
     ):
         date_string = f"{self.date.strftime('%a')} {self.date.day:>2}.".capitalize()
 
@@ -280,9 +280,9 @@ class Day:
                 raise DateInconsistencyError("Previous shift not completed.")
 
             if (
-                    shift.completed
-                    and (existing_shift.start_time < shift.stop_time)
-                    and (existing_shift.stop_time > shift.start_time)
+                shift.completed
+                and (existing_shift.start_time < shift.stop_time)
+                and (existing_shift.stop_time > shift.start_time)
             ):
                 raise DayInconsistencyError(
                     "Added shift overlaps with a previous shift "
@@ -293,10 +293,10 @@ class Day:
 
 class NonWorkingDay(Day):
     def report_data(
-            self,
-            include_active_shift: bool = False,
-            include_comments: bool = False,
-            by_project: bool = False,
+        self,
+        include_active_shift: bool = False,
+        include_comments: bool = False,
+        by_project: bool = False,
     ):
         date_string = f"{self.date.strftime('%a')} {self.date.day:>2}.".capitalize()
         return date_string, f"\x1B[3m{self.comment}\x1B[0m"

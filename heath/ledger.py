@@ -97,7 +97,9 @@ class Ledger:
             title=title,
         )
 
-    def get_custom_time_period(self, start_date: datetime.date, end_date: datetime.date):
+    def get_custom_time_period(
+        self, start_date: datetime.date, end_date: datetime.date
+    ):
         return CustomTimePeriod(
             start_date,
             end_date,
@@ -134,14 +136,10 @@ class Ledger:
         return self._non_working_dates
 
     def add_day(self, new_day: Day):
-        if new_day.date != self.next_work_date:
-            raise DateInconsistencyError(
-                "Added day is not the expected next working date. "
-                f"{new_day.date} != {self.next_work_date}"
-            )
         if new_day.date.month != self.current_month.month:
             self.add_month(Month(new_day.date.year, new_day.date.month))
-        self.current_month.add_day(new_day)
+        first_day = len(self.months) == 1 and not self.current_month.days
+        self.current_month.add_day(new_day, allow_late_start=first_day)
 
     def add_month(self, month: Month):
         for date, desciption in self.non_working_dates.get(month.year, {}).items():
@@ -191,7 +189,7 @@ class Ledger:
                     shift.lunch(datetime.timedelta(hours=hours, minutes=minutes))
 
                 day.add_shift(shift)
-            self.current_month.add_day(day)
+            self.add_day(day)
 
     def new_or_existing_project(self, project_key: str, all_day=False):
         if project_key not in self.projects:
@@ -213,9 +211,9 @@ class Ledger:
 
         non_working_dates = {}
         for date_string, description in (
-                line.split(":")
-                for line in year_string_without_comments.splitlines()
-                if line.strip()
+            line.split(":")
+            for line in year_string_without_comments.splitlines()
+            if line.strip()
         ):
             date = datetime.date.fromisoformat(date_string.strip())
             if date.year != year:

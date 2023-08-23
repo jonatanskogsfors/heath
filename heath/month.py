@@ -49,7 +49,7 @@ class Month(TimePeriod):
             [day for day in self.days if day.all_day_project_name == project_name]
         )
 
-    def add_day(self, new_day: Day):
+    def add_day(self, new_day: Day, allow_late_start: bool = False):
         if any(not day.completed for day in self._days):
             raise MonthPreviousDayNotCompletedError(
                 "All previous days are not completed."
@@ -61,7 +61,9 @@ class Month(TimePeriod):
                 f"{new_day.date.year}-{new_day.date.month} != {self.year}-{self.month}"
             )
 
-        if new_day.date > self.next_work_date:
+        if new_day.date > self.next_work_date and not (
+            len(self.days) == 0 and allow_late_start
+        ):
             raise MonthDateInconsistencyError(
                 f"Added day skips a workday ({new_day.date} > {self.next_work_date})"
             )

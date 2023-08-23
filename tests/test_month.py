@@ -84,6 +84,51 @@ def test_if_first_day_skips_workday_the_month_raises():
         given_month.add_day(given_day)
 
 
+def test_explicitly_skipping_workdays_can_be_ok_for_first_day_in_month():
+    # Given a month
+    given_month = Month(2023, 8)
+
+    # Given day after first workday date
+    given_first_workdate = datetime.date(2023, 8, 1)
+    given_second_workdate = given_first_workdate.replace(
+        day=given_first_workdate.day + 1
+    )
+
+    # Given a day on the date after the given date
+    given_day = Day(given_second_workdate)
+
+    # When adding the day to the month and explicitly allowing a late start
+    given_month.add_day(given_day, allow_late_start=True)
+
+    # Then the day is kept in the month
+    assert len(given_month.days) == 1
+    assert given_month.days[0] is given_day
+
+
+def test_explicitly_skipping_workdays_can_is_not_ok_for_subsequent_days_in_month():
+    # Given a month
+    given_month = Month(2023, 8)
+
+    # Given first workday
+    first_work_date = datetime.date(2023, 8, 1)
+    given_first_day = Day(first_work_date)
+
+    # Given first day is completed
+    given_first_day.add_shift(given_completed_shift_for_date(first_work_date))
+
+    # Given third workday
+    third_work_date = first_work_date.replace(day=first_work_date.day + 2)
+    given_third_day = Day(third_work_date)
+
+    # Given a day on the first workday has been added to month
+    given_month.add_day(given_first_day)
+
+    # When adding the third day to the month and explicitly allowing a late start
+    # Then the month still raises
+    with pytest.raises(MonthDateInconsistencyError):
+        given_month.add_day(given_third_day, allow_late_start=True)
+
+
 def test_if_additional_day_skips_a_workday_month_raises():
     # Given a month
     given_month = Month(2022, 1)

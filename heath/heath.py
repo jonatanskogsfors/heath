@@ -62,12 +62,12 @@ def cli(ctx, folder: Path, validate: bool):
 @click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
 @click.pass_context
 def year(
-        ctx,
-        year: Optional[int],
-        include_active_day: bool,
-        by_project_total: bool,
-        stats: bool,
-        overview: bool,
+    ctx,
+    year: Optional[int],
+    include_active_day: bool,
+    by_project_total: bool,
+    stats: bool,
+    overview: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
@@ -100,13 +100,13 @@ def year(
 @click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
 @click.pass_context
 def month(
-        ctx,
-        month_number: Optional[int],
-        year: Optional[int],
-        include_active_day: bool,
-        include_comments: bool,
-        stats: bool,
-        overview: bool,
+    ctx,
+    month_number: Optional[int],
+    year: Optional[int],
+    include_active_day: bool,
+    include_comments: bool,
+    stats: bool,
+    overview: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
@@ -148,15 +148,15 @@ def month(
 @click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
 @click.pass_context
 def interval(
-        ctx,
-        start_date: str,
-        end_date: str,
-        include_active_day: bool,
-        include_comments: bool,
-        by_project: bool,
-        by_project_total: bool,
-        stats: bool,
-        overview: bool,
+    ctx,
+    start_date: str,
+    end_date: str,
+    include_active_day: bool,
+    include_comments: bool,
+    by_project: bool,
+    by_project_total: bool,
+    stats: bool,
+    overview: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
@@ -203,15 +203,15 @@ def interval(
 @click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
 @click.pass_context
 def week(
-        ctx,
-        week_number: Optional[int],
-        year: Optional[int],
-        include_active_day: bool,
-        include_comments: bool,
-        by_project: bool,
-        by_project_total: bool,
-        stats: bool,
-        overview: bool,
+    ctx,
+    week_number: Optional[int],
+    year: Optional[int],
+    include_active_day: bool,
+    include_comments: bool,
+    by_project: bool,
+    by_project_total: bool,
+    stats: bool,
+    overview: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
@@ -253,21 +253,21 @@ def week(
 @click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
 @click.pass_context
 def day(
-        ctx,
-        day_number: Optional[int],
-        month_number: Optional[int],
-        year_number: Optional[int],
-        include_active_shift: bool,
-        include_comments: bool,
-        by_project: bool,
-        overview: bool,
+    ctx,
+    day_number: Optional[int],
+    month_number: Optional[int],
+    year_number: Optional[int],
+    include_active_shift: bool,
+    include_comments: bool,
+    by_project: bool,
+    overview: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
 
     if (
-            day_ledger := ledger.get_day(day_number, month_number, year_number)
-            if day_number
-            else ledger.today
+        day_ledger := ledger.get_day(day_number, month_number, year_number)
+        if day_number
+        else ledger.today
     ):
         if overview:
             week_year, week_number, _ = day_ledger.date.isocalendar()
@@ -328,7 +328,7 @@ def projects(ctx):
 @click.option("-v", "--verbose", is_flag=True)
 @click.pass_context
 def start(
-        ctx, project: str, start_time: str, same_day: bool, dry_run: bool, verbose: bool
+    ctx, project: str, start_time: str, same_day: bool, dry_run: bool, verbose: bool
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
     folder: LedgerFolder = ctx.obj["FOLDER"]
@@ -466,13 +466,13 @@ def switch(ctx, project: str, start_time: str, dry_run: bool, verbose: bool):
 @click.option("-v", "--verbose", is_flag=True)
 @click.pass_context
 def allday(
-        ctx,
-        project: str,
-        day_number: Optional[int],
-        month_number: Optional[int],
-        year: Optional[int],
-        dry_run: bool,
-        verbose: bool,
+    ctx,
+    project: str,
+    day_number: Optional[int],
+    month_number: Optional[int],
+    year: Optional[int],
+    dry_run: bool,
+    verbose: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
     folder: LedgerFolder = ctx.obj["FOLDER"]
@@ -517,23 +517,23 @@ def allday(
 @click.option("-v", "--verbose", is_flag=True)
 @click.pass_context
 def comment(
-        ctx,
-        comment_string: str,
-        day_number: int,
-        month_number: int,
-        year: int,
-        edit: bool,
-        dry_run: bool,
-        verbose: bool,
+    ctx,
+    comment_string: str,
+    day_number: int,
+    month_number: int,
+    year: int,
+    edit: bool,
+    dry_run: bool,
+    verbose: bool,
 ):
     ledger: Ledger = ctx.obj["LEDGER"]
     folder: LedgerFolder = ctx.obj["FOLDER"]
     verbose |= dry_run
 
     if (
-            day := ledger.get_day(day_number, month_number, year)
-            if day_number
-            else ledger.today
+        day := ledger.get_day(day_number, month_number, year)
+        if day_number
+        else ledger.today
     ):
         if day.comment and not edit:
             sys.exit(
@@ -550,7 +550,7 @@ def comment(
 
 
 def _write_month_to_disk(
-        ledger: Ledger, folder: LedgerFolder, year: int, month_number: int
+    ledger: Ledger, folder: LedgerFolder, year: int, month_number: int
 ):
     month = ledger.get_month(month_number, year)
 
