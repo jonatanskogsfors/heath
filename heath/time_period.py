@@ -71,11 +71,11 @@ class TimePeriod:
         return self._days.__iter__()
 
     def report(
-            self,
-            include_active_day: bool = False,
-            include_comments: bool = False,
-            by_project: bool = False,
-            by_project_total: bool = False,
+        self,
+        include_active_day: bool = False,
+        include_comments: bool = False,
+        by_project: bool = False,
+        by_project_total: bool = False,
     ) -> str:
         if by_project_total:
             projects = defaultdict(datetime.timedelta)
@@ -186,9 +186,13 @@ class TimePeriod:
     def overview(self):
         sign, balance = self.balance
         table = tabulate(
-            (("Arbetade timmar", pretty_duration(self.worked_hours).rjust(6)),
-             ("Balans", f"{sign if balance else ''}{pretty_duration(balance)}".rjust(6))),
-
+            (
+                ("Arbetade timmar", pretty_duration(self.worked_hours).rjust(6)),
+                (
+                    "Balans",
+                    f"{sign if balance else ''}{pretty_duration(balance)}".rjust(6),
+                ),
+            ),
         )
         original_line = table.splitlines()[0]
         solid_line = "-" * len(original_line)
@@ -203,7 +207,7 @@ class TimePeriod:
 
 
 def mean_median_std(
-        timepoints: list[float],
+    timepoints: list[float],
 ) -> tuple[datetime.timedelta, datetime.timedelta, datetime.timedelta]:
     mean_time = statistics.mean(timepoints) if len(timepoints) > 1 else None
     median_time = statistics.median(timepoints) if len(timepoints) > 1 else None
@@ -212,17 +216,19 @@ def mean_median_std(
     return (
         None if mean_time is None else datetime.timedelta(seconds=mean_time),
         None if median_time is None else datetime.timedelta(seconds=median_time),
-        None if standard_deviation is None else datetime.timedelta(seconds=standard_deviation)
+        None
+        if standard_deviation is None
+        else datetime.timedelta(seconds=standard_deviation),
     )
 
 
 class CustomTimePeriod(TimePeriod):
     def __init__(
-            self,
-            first_date: datetime.date,
-            last_date: datetime.date,
-            days: Collection[Day],
-            title="",
+        self,
+        first_date: datetime.date,
+        last_date: datetime.date,
+        days: Collection[Day],
+        title="",
     ):
         super().__init__()
         self.first_date = first_date

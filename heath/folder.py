@@ -101,7 +101,9 @@ class LedgerFolder:
         last_month = self.ordered_months[-1]
         next_month_number = last_month.month % 12 + 1
         next_year_number = last_month.year + (last_month.month == 12)
-        next_month_path = last_month.path.parent / f"{next_year_number}-{next_month_number}.txt"
+        next_month_path = (
+            last_month.path.parent / f"{next_year_number}-{next_month_number}.txt"
+        )
         return MonthFile(next_month_path)
 
     @property
