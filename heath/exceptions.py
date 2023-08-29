@@ -23,7 +23,7 @@ class MonthDateInconsistencyError(MonthError):
 
 
 class ProjectError(HeathError):
-    """ "Base exception for Projects"""
+    """Base exception for Projects"""
 
 
 class ShiftError(HeathError):
@@ -36,3 +36,7 @@ class ShiftConsistencyError(ShiftError):
 
 class DateInconsistencyError(HeathError):
     """Bad state concerning dates"""
+
+
+class UnknownProjectError(ProjectError):
+    """Trying to use undefined project"""

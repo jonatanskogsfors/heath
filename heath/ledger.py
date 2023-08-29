@@ -3,11 +3,7 @@ from calendar import weekday
 import configparser
 import re
 import datetime
-from heath.exceptions import (
-    DateInconsistencyError,
-    MonthDateInconsistencyError,
-    ProjectError,
-)
+from heath import exceptions
 
 from heath.month import Month
 from heath.day import Day
@@ -151,7 +147,7 @@ class Ledger:
     def add_non_working_date(self, date: datetime.date, description: str):
         for month in self.months:
             if (month.year, month.month) == (date.year, date.month):
-                raise MonthDateInconsistencyError(
+                raise exceptions.MonthDateInconsistencyError(
                     "Month for non working date already added to ledger. "
                     f"{date}: {description}"
                 )
@@ -174,7 +170,7 @@ class Ledger:
             day = Day(date, day_comment)
             for shift_matches in SHIFT_PATTERN.findall(day_match.group(2) or ""):
                 (project_key, start_time, stop_time, lunch_duration) = shift_matches
-                project = self.new_or_existing_project(project_key)
+                project = self.get_project(project_key)
                 shift = Shift(project, date)
                 if start_time:
                     time = datetime.time(*map(int, start_time.split(":")))
@@ -191,13 +187,17 @@ class Ledger:
                 day.add_shift(shift)
             self.add_day(day)
 
-    def new_or_existing_project(self, project_key: str, all_day=False):
-        if project_key not in self.projects:
-            self.add_project(Project(project_key, all_day=all_day))
-        elif all_day and not self.projects[project_key].all_day:
-            raise ProjectError(f"Project {project_key} is not an all day project.")
+    def get_project(self, project_key: str, all_day=False):
+        try:
+            project = self.projects[project_key]
+        except KeyError:
+            raise exceptions.UnknownProjectError(f"Project {project_key} is not known.")
+        if all_day and not project.all_day:
+            raise exceptions.ProjectError(
+                f"Project {project_key} is not an all day project."
+            )
 
-        return self.projects[project_key]
+        return project
 
     def parse_month(self, year, month, month_string: str) -> None:
         new_month = Month(year, month)
@@ -217,7 +217,7 @@ class Ledger:
         ):
             date = datetime.date.fromisoformat(date_string.strip())
             if date.year != year:
-                raise DateInconsistencyError(
+                raise exceptions.DateInconsistencyError(
                     "Non working date in year file is outside year. "
                     f"{date} not in {year}"
                 )

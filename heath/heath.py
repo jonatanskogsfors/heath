@@ -338,7 +338,7 @@ def start(
     if ledger.last_day.date != today and not same_day:
         ledger.add_day(Day(today))
 
-    new_shift = Shift(ledger.new_or_existing_project(project), ledger.last_day.date)
+    new_shift = Shift(ledger.get_project(project), ledger.last_day.date)
     start_datetime = datetime.datetime.combine(
         new_shift.date,
         datetime.time(*(int(number) for number in start_time.split(":"))),
@@ -432,7 +432,7 @@ def switch(ctx, project: str, start_time: str, dry_run: bool, verbose: bool):
     if ledger.current_shift.completed:
         sys.exit("There is no ongoing shift to switch from.")
 
-    new_shift = Shift(ledger.new_or_existing_project(project), ledger.last_day.date)
+    new_shift = Shift(ledger.get_project(project), ledger.last_day.date)
     switch_datetime = datetime.datetime.combine(
         new_shift.date,
         datetime.time(*(int(number) for number in start_time.split(":"))),
@@ -479,7 +479,7 @@ def allday(
     verbose |= dry_run
 
     try:
-        all_day_project = ledger.new_or_existing_project(project, all_day=True)
+        all_day_project = ledger.get_project(project, all_day=True)
     except ProjectError:
         sys.exit(f"Project {project} is not an all day project.")
 
