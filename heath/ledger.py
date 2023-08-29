@@ -7,6 +7,7 @@ from heath.exceptions import (
     DateInconsistencyError,
     MonthDateInconsistencyError,
     ProjectError,
+    UnknownProjectError,
 )
 
 from heath.month import Month
@@ -174,7 +175,7 @@ class Ledger:
             day = Day(date, day_comment)
             for shift_matches in SHIFT_PATTERN.findall(day_match.group(2) or ""):
                 (project_key, start_time, stop_time, lunch_duration) = shift_matches
-                project = self.new_or_existing_project(project_key)
+                project = self.get_project(project_key)
                 shift = Shift(project, date)
                 if start_time:
                     time = datetime.time(*map(int, start_time.split(":")))
@@ -191,13 +192,15 @@ class Ledger:
                 day.add_shift(shift)
             self.add_day(day)
 
-    def new_or_existing_project(self, project_key: str, all_day=False):
-        if project_key not in self.projects:
-            self.add_project(Project(project_key, all_day=all_day))
-        elif all_day and not self.projects[project_key].all_day:
+    def get_project(self, project_key: str, all_day=False):
+        try:
+            project = self.projects[project_key]
+        except KeyError:
+            raise UnknownProjectError(f"Project {project_key} is not known.")
+        if all_day and not project.all_day:
             raise ProjectError(f"Project {project_key} is not an all day project.")
 
-        return self.projects[project_key]
+        return project
 
     def parse_month(self, year, month, month_string: str) -> None:
         new_month = Month(year, month)

@@ -42,8 +42,9 @@ def test_day_with_no_shifts_can_be_parsed_from_string():
 
 
 def test_day_with_unstarted_shift_can_be_parsed_from_string():
-    # Given a project name and a project
+    # Given a project name
     given_project_key = "SpecificProject"
+    given_project = Project(given_project_key)
 
     # Given a year, month and day
     given_year = 2021
@@ -60,6 +61,7 @@ def test_day_with_unstarted_shift_can_be_parsed_from_string():
     # Given a ledger with the project and the month
     given_ledger = Ledger()
     given_ledger.add_month(given_month)
+    given_ledger.add_project(given_project)
 
     # When parsing the string
     given_ledger.parse_day(given_year, given_month_number, given_day_string)
@@ -107,15 +109,20 @@ def test_day_with_comment_can_be_parsed():
     given_month = Month(given_year, given_month_number)
     assert len(given_month.days) == 0
 
-    # Given a ledger with the month
+    # Given a project
+    given_project_key = "Work"
+    given_project = Project(given_project_key)
+
+    # Given a ledger with the project and a month
     given_ledger = Ledger()
+    given_ledger.add_project(given_project)
     given_ledger.add_month(given_month)
 
     # Given a comment
     given_comment = "What a way to make a living!"
 
     # Given a string expressing a day with the comment
-    given_day_string = f"1. Work 9:00 - 17:00 # {given_comment}"
+    given_day_string = f"1. {given_project_key} 9:00 - 17:00 # {given_comment}"
 
     # When parsing the string
     given_ledger.parse_day(given_year, given_month_number, given_day_string)
@@ -217,9 +224,10 @@ def test_various_day_strings_with_one_shift(
     given_month = Month(given_year, given_month_number)
     assert len(given_month.days) == 0
 
-    # Given ledger
+    # Given ledger with the given month and the expected project
     given_ledger = Ledger()
     given_ledger.add_month(given_month)
+    given_ledger.add_project(Project(expected_project))
 
     # When parsing the string
     given_ledger.parse_day(given_year, given_month_number, given_day_string)
@@ -256,7 +264,23 @@ def test_various_day_strings_with_one_shift(
     assert expected_project in given_ledger.projects
 
 
-def test_known_projects_are_reused():
+def test_unknown_projects_are_rejected():
+    # Given a ledger
+    given_ledger = Ledger()
+
+    # Given there are no projects
+    assert len(given_ledger.projects) == 0
+    
+    # Given a day string with a project
+    given_day_string = f"1. ProjectX 8:00 - 17:00. Lunch 1:00"
+
+    # When parsing the string
+    # Then the ledger raises
+    with pytest.raises(exceptions.UnknownProjectError):
+        given_ledger.parse_day(2023, 8, given_day_string)
+
+
+def test_known_projects_are_used():
     # Given a ledger
     given_ledger = Ledger()
 
@@ -291,9 +315,10 @@ def test_known_projects_are_reused():
 
 
 @pytest.mark.parametrize(
-    "given_day_string, expected_day, expected_shifts, expected_worked_hours",
+    "given_projects, given_day_string, expected_day, expected_shifts, expected_worked_hours",
     [
         (
+            ("Project1", "Project2"),
             "1. Project1 8:00 - 13:00, Lunch 0:30; Project2",
             1,
             (
@@ -309,6 +334,7 @@ def test_known_projects_are_reused():
             timedelta(hours=4, minutes=30),
         ),
         (
+            ("Project1", "Project2"),
             "1. Project1 8:00 - 13:00, Lunch 0:30; Project2 13:00",
             1,
             (
@@ -324,6 +350,7 @@ def test_known_projects_are_reused():
             timedelta(hours=4, minutes=30),
         ),
         (
+            ("Project1", "Project2"),
             "1. Project1 8:00 - 13:00, Lunch 0:30; Project2 13:00 - 17:00",
             1,
             (
@@ -339,6 +366,7 @@ def test_known_projects_are_reused():
             timedelta(hours=8, minutes=30),
         ),
         (
+            ("Project1",),
             "1. Project1 8:00 - 14:00, Lunch 0:45; Project1 16:00 - 17:00",
             1,
             (
@@ -354,6 +382,7 @@ def test_known_projects_are_reused():
             timedelta(hours=6, minutes=15),
         ),
         (
+            ("Project1", "Project2", "Project3"),
             "1. Project1 8:00 - 10:00; Project2 10:00 - 14:00, Lunch 1:00; Project3 14:00 - 17:00",
             1,
             (
@@ -372,6 +401,7 @@ def test_known_projects_are_reused():
     ],
 )
 def test_various_day_strings_with_multiple_shifts(
+    given_projects,
     given_day_string,
     expected_day,
     expected_shifts,
@@ -387,8 +417,10 @@ def test_various_day_strings_with_multiple_shifts(
     given_month = Month(given_year, given_month_number)
     assert len(given_month.days) == 0
 
-    # Given a ledger
+    # Given a ledger with given projects and month
     given_ledger = Ledger()
+    for project_name in given_projects:
+        given_ledger.add_project(Project(project_name))
     given_ledger.add_month(given_month)
 
     # When parsing the string
@@ -448,12 +480,13 @@ def test_various_day_strings_with_multiple_shifts(
 
 
 @pytest.mark.parametrize(
-    "given_year, given_month, given_month_string, given_all_day_projects, expected_dates, expected_projects, expected_worked_hours",
+    "given_year, given_month, given_month_string, given_projects, given_all_day_projects, expected_dates, expected_projects, expected_worked_hours",
     [
         (
             2022,
             1,
             "3. Project 8:00-17:00, lunch 1:00",
+            ("project",),
             (),
             {date(2022, 1, 3)},
             1,
@@ -464,7 +497,7 @@ def test_various_day_strings_with_multiple_shifts(
             1,
             """3. Project1 8:00-17:00, lunch 1:00
 4. Project1 8:00-13:00, lunch 1:00; Project2 13:00-16:00""",
-            (),
+            ("project1", "Project2",),
             {date(2022, 1, 3), date(2022, 1, 4)},
             2,
             timedelta(hours=15),
@@ -476,6 +509,7 @@ def test_various_day_strings_with_multiple_shifts(
 2. Project2 9:00-17:00, lunch 0:30
 3. Semester
 4. Project1 10:00-12:30, lunch 0:30; Project2 12:30-15:00""",
+            ("project1", "Project2"),
             ("Semester",),
             {date(2022, 3, 1), date(2022, 3, 2), date(2022, 3, 3), date(2022, 3, 4)},
             3,
@@ -487,13 +521,16 @@ def test_various_month_strings(
     given_year,
     given_month,
     given_month_string,
+    given_projects,
     given_all_day_projects,
     expected_dates,
     expected_projects,
     expected_worked_hours,
 ):
-    # Given ledger
+    # Given ledger with the given projects
     given_ledger = Ledger()
+    for project_name in given_projects:
+        given_ledger.add_project(Project(project_name))
 
     # Given any all day projects
     for project_name in given_all_day_projects:
@@ -516,7 +553,12 @@ def test_complete_month_example():
     # Given ledger
     given_ledger = Ledger()
 
-    # Given two special projects
+    # Given three projects (from example month)
+    given_ledger.add_project(Project("Project1"))
+    given_ledger.add_project(Project("Project2"))
+    given_ledger.add_project(Project("Project3"))
+
+    # Given two all day projects
     vacation_project = Project("Vacation", all_day=True)
     sick_leave_project = Project("SickLeave", all_day=True)
     given_ledger.add_project(vacation_project)
