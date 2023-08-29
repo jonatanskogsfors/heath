@@ -344,19 +344,28 @@ def test_non_working_days_can_have_a_comment():
         ((), "1. Project 8:00 - 17:00, Lunch 0:30 # A comment.\n"),
         ((), "1. ProjectA 8:00 - 13:00, Lunch 0:30; ProjectB\n"),
         ((), "1. ProjectA 8:00 - 13:00, Lunch 0:30; ProjectB 13:00 - 17:00\n"),
-        ((), "1. ProjectA 8:00 - 13:00, Lunch 0:30; ProjectB 13:00 - 17:00 # A comment.\n"),
-        ((), """\
+        (
+            (),
+            "1. ProjectA 8:00 - 13:00, Lunch 0:30; ProjectB 13:00 - 17:00 # A comment.\n",
+        ),
+        (
+            (),
+            """\
         1. Project 8:00 - 17:00, Lunch 1:00
         2. Project 8:30 -
-        """),
-        ((), """\
+        """,
+        ),
+        (
+            (),
+            """\
         1. ProjectA 8:00 - 10:00; ProjectB 10:00 - 16:30, Lunch 1:00
         2. ProjectA 5:30 - 13:00 # Early bird catches the worm
         3. ProjectA 10:00 - 17:00
         4. ProjectB 8:00 - 13:00, Lunch 0:30; ProjectC 13:00 - 15:00; ProjectA 15:00 - 16:30
         7. Vacation # Finally!
         8. Vacation
-        """),
+        """,
+        ),
     ),
 )
 def test_month_string_identical_roundtrip(given_month_string):

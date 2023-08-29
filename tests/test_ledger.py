@@ -270,7 +270,7 @@ def test_unknown_projects_are_rejected():
 
     # Given there are no projects
     assert len(given_ledger.projects) == 0
-    
+
     # Given a day string with a project
     given_day_string = f"1. ProjectX 8:00 - 17:00. Lunch 1:00"
 
@@ -497,7 +497,10 @@ def test_various_day_strings_with_multiple_shifts(
             1,
             """3. Project1 8:00-17:00, lunch 1:00
 4. Project1 8:00-13:00, lunch 1:00; Project2 13:00-16:00""",
-            ("project1", "Project2",),
+            (
+                "project1",
+                "Project2",
+            ),
             {date(2022, 1, 3), date(2022, 1, 4)},
             2,
             timedelta(hours=15),
