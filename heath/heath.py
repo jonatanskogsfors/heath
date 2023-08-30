@@ -52,19 +52,21 @@ def cli(ctx, folder: Path, validate: bool):
     is_flag=True,
     help="Show current duration for any non complete day.",
 )
+@click.option("-p", "--by-project", is_flag=True, help="Group by project per day.")
 @click.option(
     "-P",
     "--by-project-total",
     is_flag=True,
-    help="Group by project for the whole week.",
+    help="Group by project for the whole year.",
 )
 @click.option("-s", "--stats", is_flag=True, help="Show statistics.")
-@click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
+@click.option("-o", "--overview", is_flag=True, help="Brief overview of year.")
 @click.pass_context
 def year(
     ctx,
     year: Optional[int],
     include_active_day: bool,
+    by_project: bool,
     by_project_total: bool,
     stats: bool,
     overview: bool,
@@ -79,7 +81,9 @@ def year(
         report = year_ledger.overview()
     else:
         report = year_ledger.report(
-            include_active_day=include_active_day, by_project_total=by_project_total
+            include_active_day=include_active_day,
+            by_project=by_project,
+            by_project_total=by_project_total,
         )
     print("\n" + report + "\n")
 
@@ -96,8 +100,15 @@ def year(
 @click.option(
     "-c", "--include-comments", is_flag=True, help="Show any comments for days."
 )
+@click.option("-p", "--by-project", is_flag=True, help="Group by project per day.")
+@click.option(
+    "-P",
+    "--by-project-total",
+    is_flag=True,
+    help="Group by project for the whole month.",
+)
 @click.option("-s", "--stats", is_flag=True, help="Show statistics.")
-@click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
+@click.option("-o", "--overview", is_flag=True, help="Brief overview of month.")
 @click.pass_context
 def month(
     ctx,
@@ -105,6 +116,8 @@ def month(
     year: Optional[int],
     include_active_day: bool,
     include_comments: bool,
+    by_project: bool,
+    by_project_total: bool,
     stats: bool,
     overview: bool,
 ):
@@ -120,7 +133,10 @@ def month(
         report = month_ledger.overview()
     else:
         report = month_ledger.report(
-            include_active_day=include_active_day, include_comments=include_comments
+            include_active_day=include_active_day,
+            include_comments=include_comments,
+            by_project=by_project,
+            by_project_total=by_project_total,
         )
     print("\n" + report + "\n")
 
@@ -142,10 +158,10 @@ def month(
     "-P",
     "--by-project-total",
     is_flag=True,
-    help="Group by project for the whole week.",
+    help="Group by project for the whole interval.",
 )
 @click.option("-s", "--stats", is_flag=True, help="Show statistics.")
-@click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
+@click.option("-o", "--overview", is_flag=True, help="Brief overview of interval.")
 @click.pass_context
 def interval(
     ctx,
@@ -200,7 +216,7 @@ def interval(
     help="Group by project for the whole week.",
 )
 @click.option("-s", "--stats", is_flag=True, help="Show statistics.")
-@click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
+@click.option("-o", "--overview", is_flag=True, help="Brief overview of week.")
 @click.pass_context
 def week(
     ctx,
