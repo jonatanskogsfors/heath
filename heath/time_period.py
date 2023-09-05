@@ -1,10 +1,19 @@
 from collections import defaultdict
 import datetime
-from typing import Collection, Iterable, Optional
-from heath.day import Day, NonWorkingDay
+from typing import Collection, Optional
+from heath.day import Day
 from tabulate import tabulate
 from heath.time_utils import pretty_duration, time_to_seconds
 import statistics
+
+
+class AnsiColors:
+    RED = "\033[91m"
+    END = "\033[0m"
+
+    @classmethod
+    def red(cls, text: str):
+        return cls.RED + text + cls.END
 
 
 class TimePeriod:
@@ -91,14 +100,49 @@ class TimePeriod:
                 for project, duration in projects.items()
             ]
         else:
-            report_data = [
-                day.report_data(
-                    include_active_shift=include_active_day,
-                    include_comments=include_comments,
-                    by_project=by_project,
+            report_data = []
+            for day in self.all_days:
+                date_string = (
+                    f"{day.date.strftime('%a')} {day.date.day:>2}.".capitalize()
                 )
-                for day in self.all_days
-            ]
+                comment_string = (
+                    f"# {day.comment}" if day.comment and include_comments else ""
+                )
+
+                if not day.shifts:
+                    report_data.append(
+                        (AnsiColors.red(date_string), AnsiColors.red(day.comment))
+                    )
+                elif by_project:
+                    for project, duration in day.project_durations(
+                        include_active_shifts=include_active_day
+                    ).items():
+                        report_data.append(
+                            (
+                                date_string,
+                                project,
+                                pretty_duration(duration),
+                                comment_string,
+                            )
+                        )
+                        date_string = ""
+                        comment_string = ""
+                else:
+                    duration = (
+                        day.current_duration()
+                        if not day.all_day and (day.completed or include_active_day)
+                        else ""
+                    )
+                    duration_string = pretty_duration(duration) if duration else ""
+
+                    for shift in day.shifts:
+                        report_data.append(
+                            (date_string, str(shift), duration_string, comment_string)
+                        )
+                        duration_string = ""
+                        date_string = ""
+                        comment_string = ""
+
         table = tabulate(report_data)
         if not table:
             return f"No data for {self.title}."
@@ -236,7 +280,7 @@ class CustomTimePeriod(TimePeriod):
         self.title = title
         for day in days:
             if self.first_date <= day.date <= self.last_date:
-                if isinstance(day, NonWorkingDay):
+                if day.non_working_day:
                     self._non_working_dates[day.date] = day
                 else:
                     self._days.append(day)

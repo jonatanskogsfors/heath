@@ -138,3 +138,50 @@ def test_added_shift_cant_overlap_with_previous_shift():
     # Then the shift raises
     with pytest.raises(DayInconsistencyError):
         given_day.add_shift(given_second_shift)
+
+
+def test_project_durations_sum_completed_shifts_per_project():
+    # Given three projects
+    given_project_a = Project("A")
+    given_project_b = Project("B")
+    given_project_c = Project("C")
+
+    # Given a date
+    given_date = datetime.date(2023, 9, 5)
+
+    # Given a day
+    given_day = Day(given_date)
+
+    # Given two completed shifts for one of the projects
+    completed_shift_1 = Shift(given_project_a, given_date)
+    completed_shift_1.start(datetime.datetime(2023, 9, 5, 8))
+    completed_shift_1.stop(datetime.datetime(2023, 9, 5, 9))
+    given_day.add_shift(completed_shift_1)
+
+    completed_shift_2 = Shift(given_project_a, given_date)
+    completed_shift_2.start(datetime.datetime(2023, 9, 5, 9))
+    completed_shift_2.stop(datetime.datetime(2023, 9, 5, 10))
+    given_day.add_shift(completed_shift_2)
+
+    # Given one completed shift for another project
+    completed_shift_3 = Shift(given_project_b, given_date)
+    completed_shift_3.start(datetime.datetime(2023, 9, 5, 10))
+    completed_shift_3.stop(datetime.datetime(2023, 9, 5, 11))
+    given_day.add_shift(completed_shift_3)
+
+    # Given an incomplete shift for the third project
+    incomplete_shift = Shift(given_project_c, given_date)
+    incomplete_shift.start(datetime.datetime(2023, 9, 5, 12))
+    given_day.add_shift(incomplete_shift)
+
+    # When calling project_durations
+    project_durations = given_day.project_durations()
+
+    # Then only the projects for the completed shifts are included
+    assert given_project_a.key in project_durations
+    assert given_project_b.key in project_durations
+    assert given_project_c.key not in project_durations
+
+    # And the projects have the expected durations
+    assert project_durations[given_project_a.key] == datetime.timedelta(hours=2)
+    assert project_durations[given_project_b.key] == datetime.timedelta(hours=1)
