@@ -2,7 +2,7 @@ import calendar
 import datetime
 from typing import Optional
 
-from heath.day import Day, NonWorkingDay
+from heath.day import Day
 from heath.exceptions import (
     MonthDateInconsistencyError,
     MonthPreviousDayNotCompletedError,
@@ -73,7 +73,7 @@ class Month(TimePeriod):
     def add_non_working_date(
         self, non_working_date: datetime.date, comment: str = None
     ):
-        non_working_day = NonWorkingDay(non_working_date, comment)
+        non_working_day = Day(non_working_date, comment, non_working_day=True)
         self._non_working_dates[non_working_date] = non_working_day
 
     def serialize(self) -> str:

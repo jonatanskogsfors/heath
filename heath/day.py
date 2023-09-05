@@ -10,12 +10,15 @@ tabulate.PRESERVE_WHITESPACE = True
 
 
 class Day:
-    def __init__(self, date: datetime.date, comment: str = None):
+    def __init__(
+        self, date: datetime.date, comment: str = None, non_working_day: bool = False
+    ):
         if not isinstance(date, datetime.date):
             raise DayError("A date must be given.")
         self.date = date
         self.comment = comment
         self._shifts = []
+        self.non_working_day = non_working_day
 
     def __str__(self):
         date = f"{self.date.day}."
@@ -74,6 +77,10 @@ class Day:
         return self.all_day or (
             self.shifts and all(shift.completed for shift in self.shifts)
         )
+
+    def current_duration(self):
+        now_by_the_minute = datetime.datetime.now().replace(second=0, microsecond=0)
+        return self.duration_at(now_by_the_minute)
 
     def duration_at(self, read_time: datetime.datetime) -> datetime.timedelta:
         return sum(
@@ -161,47 +168,18 @@ class Day:
                 projects[shift.project.key] += shift.duration
         return sorted((project, duration) for project, duration in projects.items())
 
-    def report_data(
-        self,
-        include_active_shift: bool = False,
-        include_comments: bool = False,
-        by_project: bool = False,
-    ):
-        date_string = f"{self.date.strftime('%a')} {self.date.day:>2}.".capitalize()
-
-        duration_string = ""
-
-        if by_project:
-            projects = defaultdict(datetime.timedelta)
-            for shift in self.shifts:
-                if include_active_shift:
-                    projects[shift.project.key] += shift.current_duration
-                else:
-                    projects[shift.project.key] += shift.duration
-            shift_data = sorted(
-                (project, duration) for project, duration in projects.items()
+    def project_durations(self, include_active_shifts: bool = False):
+        now_by_the_minute = datetime.datetime.now().replace(second=0, microsecond=0)
+        projects = defaultdict(datetime.timedelta)
+        for shift in [
+            shift for shift in self.shifts if shift.completed or include_active_shifts
+        ]:
+            projects[shift.project.key] += (
+                shift.duration
+                if shift.completed or not include_active_shifts
+                else shift.duration_at(now_by_the_minute)
             )
-
-            shifts_string = "\n".join([shift[0] for shift in shift_data])
-            duration_string = "\n".join(
-                pretty_duration(shift[1]) for shift in shift_data
-            )
-        else:
-            shifts_string = "\n".join(str(shift) for shift in self.shifts)
-
-            if not self.all_day and (self.completed or include_active_shift):
-                duration = (
-                    self.worked_hours
-                    if self.completed
-                    else self.duration_at(datetime.datetime.now().replace(second=0))
-                )
-                duration_string = pretty_duration(duration)
-        return (
-            date_string,
-            shifts_string,
-            duration_string,
-            f"# {self.comment}" if self.comment and include_comments else None,
-        )
+        return projects
 
     def overview(self, week_balance: tuple[str, datetime.timedelta] = None):
         if self.completed:
@@ -289,14 +267,3 @@ class Day:
                     f"({shift.start_time}-{shift.stop_time}, "
                     f"{existing_shift.start_time}-{existing_shift.stop_time}"
                 )
-
-
-class NonWorkingDay(Day):
-    def report_data(
-        self,
-        include_active_shift: bool = False,
-        include_comments: bool = False,
-        by_project: bool = False,
-    ):
-        date_string = f"{self.date.strftime('%a')} {self.date.day:>2}.".capitalize()
-        return date_string, f"\x1B[3m{self.comment}\x1B[0m"
