@@ -5,11 +5,21 @@ from heath.project import Project
 from heath.shift import Shift
 
 
-def given_completed_shift_for_date(shift_date: datetime.date) -> Shift:
-    new_shift = Shift(Project("AnyProject"), shift_date)
-    new_shift.start(datetime.datetime.combine(shift_date, datetime.time(9)))
-    new_shift.stop(datetime.datetime.combine(shift_date, datetime.time(17)))
+def given_completed_shift_for_project_between_times(
+    project: Project, start: datetime.datetime, stop: datetime.datetime
+) -> Shift:
+    new_shift = Shift(project, start.date())
+    new_shift.start(start)
+    new_shift.stop(stop)
     return new_shift
+
+
+def given_completed_shift_for_date(shift_date: datetime.date) -> Shift:
+    return given_completed_shift_for_project_between_times(
+        Project("AnyProject"),
+        datetime.datetime.combine(shift_date, datetime.time(9)),
+        datetime.datetime.combine(shift_date, datetime.time(9)),
+    )
 
 
 def given_completed_day_for_date(day_date: datetime.date) -> Day:

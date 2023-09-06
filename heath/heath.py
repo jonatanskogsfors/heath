@@ -59,6 +59,13 @@ def cli(ctx, folder: Path, validate: bool):
     is_flag=True,
     help="Group by project for the whole year.",
 )
+@click.option(
+    "-r",
+    "--round-durations",
+    is_flag=True,
+    help="Round project durations to nearest half hours if possible."
+    "Total duration will remain unaffected.",
+)
 @click.option("-s", "--stats", is_flag=True, help="Show statistics.")
 @click.option("-o", "--overview", is_flag=True, help="Brief overview of year.")
 @click.pass_context
@@ -68,6 +75,7 @@ def year(
     include_active_day: bool,
     by_project: bool,
     by_project_total: bool,
+    round_durations: bool,
     stats: bool,
     overview: bool,
 ):
@@ -84,6 +92,7 @@ def year(
             include_active_day=include_active_day,
             by_project=by_project,
             by_project_total=by_project_total,
+            round_project_durations=round_durations,
         )
     print("\n" + report + "\n")
 
@@ -107,6 +116,13 @@ def year(
     is_flag=True,
     help="Group by project for the whole month.",
 )
+@click.option(
+    "-r",
+    "--round-durations",
+    is_flag=True,
+    help="Round project durations to nearest half hours if possible."
+    "Total duration will remain unaffected.",
+)
 @click.option("-s", "--stats", is_flag=True, help="Show statistics.")
 @click.option("-o", "--overview", is_flag=True, help="Brief overview of month.")
 @click.pass_context
@@ -118,6 +134,7 @@ def month(
     include_comments: bool,
     by_project: bool,
     by_project_total: bool,
+    round_durations: bool,
     stats: bool,
     overview: bool,
 ):
@@ -137,6 +154,7 @@ def month(
             include_comments=include_comments,
             by_project=by_project,
             by_project_total=by_project_total,
+            round_project_durations=round_durations,
         )
     print("\n" + report + "\n")
 
@@ -160,6 +178,13 @@ def month(
     is_flag=True,
     help="Group by project for the whole interval.",
 )
+@click.option(
+    "-r",
+    "--round-durations",
+    is_flag=True,
+    help="Round project durations to nearest half hours if possible."
+    "Total duration will remain unaffected.",
+)
 @click.option("-s", "--stats", is_flag=True, help="Show statistics.")
 @click.option("-o", "--overview", is_flag=True, help="Brief overview of interval.")
 @click.pass_context
@@ -171,6 +196,7 @@ def interval(
     include_comments: bool,
     by_project: bool,
     by_project_total: bool,
+    round_durations: bool,
     stats: bool,
     overview: bool,
 ):
@@ -191,6 +217,7 @@ def interval(
             include_comments=include_comments,
             by_project=by_project,
             by_project_total=by_project_total,
+            round_project_durations=round_durations,
         )
 
     print("\n" + report + "\n")
@@ -215,6 +242,13 @@ def interval(
     is_flag=True,
     help="Group by project for the whole week.",
 )
+@click.option(
+    "-r",
+    "--round-durations",
+    is_flag=True,
+    help="Round project durations to nearest half hours if possible."
+    "Total duration will remain unaffected.",
+)
 @click.option("-s", "--stats", is_flag=True, help="Show statistics.")
 @click.option("-o", "--overview", is_flag=True, help="Brief overview of week.")
 @click.pass_context
@@ -226,6 +260,7 @@ def week(
     include_comments: bool,
     by_project: bool,
     by_project_total: bool,
+    round_durations: bool,
     stats: bool,
     overview: bool,
 ):
@@ -247,6 +282,7 @@ def week(
             include_comments=include_comments,
             by_project=by_project,
             by_project_total=by_project_total,
+            round_project_durations=round_durations,
         )
 
     print("\n" + report + "\n")
