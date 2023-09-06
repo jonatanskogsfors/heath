@@ -6,7 +6,7 @@ from heath.day import Day
 from heath.project import Project
 from heath.time_period import TimePeriod, lossless_round
 
-from tests.test_utilities import given_completed_shift_for_project_between_times
+from tests.utilities import given_completed_shift_for_project_between_times
 
 
 def test_get_project_durations_for_time_period():

@@ -12,7 +12,8 @@ from heath.exceptions import (
 )
 from heath.project import Project
 from heath.shift import Shift
-from tests.test_utilities import (
+
+from tests.utilities import (
     given_completed_day_for_date,
     given_completed_shift_for_date,
 )
