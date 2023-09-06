@@ -9,13 +9,18 @@ import statistics
 HALF_AN_HOUR = 60 * 30
 
 
-class AnsiColors:
+class Ansi:
     RED = "\033[91m"
+    ITALICS = "\033[3m"
     END = "\033[0m"
 
     @classmethod
     def red(cls, text: str):
         return cls.RED + text + cls.END
+
+    @classmethod
+    def italics(cls, text: str):
+        return cls.ITALICS + text + cls.END
 
 
 class TimePeriod:
@@ -67,10 +72,12 @@ class TimePeriod:
             start=datetime.timedelta(),
         )
 
-    def project_durations(self):
+    def project_durations(self, include_active_day: bool = False):
         projects = defaultdict(dict)
         for day in self.all_days:
-            for project, duration in day.project_durations().items():
+            for project, duration in day.project_durations(
+                include_active_shifts=include_active_day
+            ).items():
                 projects[project][day.date] = duration
         return projects
 
@@ -97,84 +104,13 @@ class TimePeriod:
         round_project_durations: bool = False,
     ) -> str:
         if by_project_total:
-            projects = defaultdict(datetime.timedelta)
-            day_data = [
-                day.report_data_by_project(include_active_shift=include_active_day)
-                for day in self.all_days
-            ]
-            for day in day_data:
-                for project, duration in day:
-                    projects[project] += duration
-            report_data = [
-                (project, pretty_duration(duration).rjust(6))
-                for project, duration in projects.items()
-            ]
+            report_data = self._report_data_for_project_totals(include_active_day)
         elif by_project:
-            project_durations = self.project_durations()
-            if round_project_durations:
-                for project, durations in project_durations.items():
-                    project_durations[project] = lossless_round(durations)
-
-            date_project_durations = defaultdict(dict)
-            for project, dates in project_durations.items():
-                for date, duration in dates.items():
-                    date_project_durations[date][project] = duration
-
-            report_data = []
-            for day in self.all_days:
-                date_string = (
-                    f"{day.date.strftime('%a')} {day.date.day:>2}.".capitalize()
-                )
-                comment_string = (
-                    f"# {day.comment}" if day.comment and include_comments else ""
-                )
-
-                if not day.shifts:
-                    report_data.append(
-                        (AnsiColors.red(date_string), AnsiColors.red(day.comment))
-                    )
-                else:
-                    for project, duration in date_project_durations[day.date].items():
-                        report_data.append(
-                            (
-                                date_string,
-                                project,
-                                pretty_duration(duration),
-                                comment_string,
-                            )
-                        )
-                        date_string = ""
-                        comment_string = ""
+            report_data = self._report_data_by_project(
+                include_active_day, include_comments, round_project_durations
+            )
         else:
-            report_data = []
-
-            for day in self.all_days:
-                date_string = (
-                    f"{day.date.strftime('%a')} {day.date.day:>2}.".capitalize()
-                )
-                comment_string = (
-                    f"# {day.comment}" if day.comment and include_comments else ""
-                )
-
-                if not day.shifts:
-                    report_data.append(
-                        (AnsiColors.red(date_string), AnsiColors.red(day.comment))
-                    )
-                else:
-                    duration = (
-                        day.current_duration()
-                        if not day.all_day and (day.completed or include_active_day)
-                        else ""
-                    )
-                    duration_string = pretty_duration(duration) if duration else ""
-
-                    for shift in day.shifts:
-                        report_data.append(
-                            (date_string, str(shift), duration_string, comment_string)
-                        )
-                        duration_string = ""
-                        date_string = ""
-                        comment_string = ""
+            report_data = self._report_data_by_day(include_active_day, include_comments)
 
         table = tabulate(report_data)
         if not table:
@@ -200,6 +136,93 @@ class TimePeriod:
                 solid_line,
             )
         )
+
+    def _report_data_by_day(self, include_active_day: bool, include_comments: bool):
+        report_data = []
+
+        for day in self.all_days:
+            date_string = f"{day.date.strftime('%a')} {day.date.day:>2}.".capitalize()
+            comment_string = (
+                Ansi.italics(f"# {day.comment}")
+                if day.comment and include_comments
+                else ""
+            )
+
+            if not day.shifts:
+                report_data.append((Ansi.red(date_string), Ansi.red(day.comment)))
+            else:
+                duration = (
+                    day.current_duration()
+                    if not day.all_day and (day.completed or include_active_day)
+                    else ""
+                )
+                duration_string = pretty_duration(duration) if duration else ""
+
+                for shift in day.shifts:
+                    report_data.append(
+                        (date_string, str(shift), duration_string, comment_string)
+                    )
+                    duration_string = ""
+                    date_string = ""
+                    comment_string = ""
+        return report_data
+
+    def _report_data_by_project(
+        self,
+        include_active_day: bool,
+        include_comments: bool,
+        round_project_durations: bool,
+    ):
+        project_durations = self.project_durations(
+            include_active_day=include_active_day
+        )
+        if round_project_durations:
+            for project, durations in project_durations.items():
+                project_durations[project] = lossless_round(durations)
+
+        date_project_durations = defaultdict(dict)
+        for project, dates in project_durations.items():
+            for date, duration in dates.items():
+                date_project_durations[date][project] = duration
+
+        report_data = []
+        for day in self.all_days:
+            date_string = f"{day.date.strftime('%a')} {day.date.day:>2}.".capitalize()
+            comment_string = (
+                Ansi.italics(f"# {day.comment}")
+                if day.comment and include_comments
+                else ""
+            )
+
+            if not day.shifts:
+                report_data.append((Ansi.red(date_string), Ansi.red(day.comment)))
+            else:
+                for project, duration in date_project_durations[day.date].items():
+                    report_data.append(
+                        (
+                            date_string,
+                            project,
+                            pretty_duration(duration),
+                            comment_string,
+                        )
+                    )
+                    date_string = ""
+                    comment_string = ""
+        return report_data
+
+    def _report_data_for_project_totals(self, include_active_day):
+        projects = defaultdict(datetime.timedelta)
+        day_data = [
+            day.report_data_by_project(include_active_shift=include_active_day)
+            for day in self.all_days
+        ]
+        for day in day_data:
+            for project, duration in day:
+                projects[project] += duration
+        return [
+            (project, pretty_duration(duration).rjust(6))
+            for project, duration in projects.items()
+        ]
 
     def statistics_report(self):
         table = tabulate(self.statistics(), headers=("", "Medel", "Median", "SD"))
