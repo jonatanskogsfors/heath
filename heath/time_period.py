@@ -6,6 +6,8 @@ from tabulate import tabulate
 from heath.time_utils import pretty_duration, time_to_seconds
 import statistics
 
+HALF_AN_HOUR = 60 * 30
+
 
 class AnsiColors:
     RED = "\033[91m"
@@ -65,6 +67,13 @@ class TimePeriod:
             start=datetime.timedelta(),
         )
 
+    def project_durations(self):
+        projects = defaultdict(dict)
+        for day in self.all_days:
+            for project, duration in day.project_durations().items():
+                projects[project][day.date] = duration
+        return projects
+
     @property
     def last_day(self) -> Optional[Day]:
         return self._days[-1] if self._days else None
@@ -85,6 +94,7 @@ class TimePeriod:
         include_comments: bool = False,
         by_project: bool = False,
         by_project_total: bool = False,
+        round_project_durations: bool = False,
     ) -> str:
         if by_project_total:
             projects = defaultdict(datetime.timedelta)
@@ -99,7 +109,17 @@ class TimePeriod:
                 (project, pretty_duration(duration).rjust(6))
                 for project, duration in projects.items()
             ]
-        else:
+        elif by_project:
+            project_durations = self.project_durations()
+            if round_project_durations:
+                for project, durations in project_durations.items():
+                    project_durations[project] = lossless_round(durations)
+
+            date_project_durations = defaultdict(dict)
+            for project, dates in project_durations.items():
+                for date, duration in dates.items():
+                    date_project_durations[date][project] = duration
+
             report_data = []
             for day in self.all_days:
                 date_string = (
@@ -113,10 +133,8 @@ class TimePeriod:
                     report_data.append(
                         (AnsiColors.red(date_string), AnsiColors.red(day.comment))
                     )
-                elif by_project:
-                    for project, duration in day.project_durations(
-                        include_active_shifts=include_active_day
-                    ).items():
+                else:
+                    for project, duration in date_project_durations[day.date].items():
                         report_data.append(
                             (
                                 date_string,
@@ -127,6 +145,21 @@ class TimePeriod:
                         )
                         date_string = ""
                         comment_string = ""
+        else:
+            report_data = []
+
+            for day in self.all_days:
+                date_string = (
+                    f"{day.date.strftime('%a')} {day.date.day:>2}.".capitalize()
+                )
+                comment_string = (
+                    f"# {day.comment}" if day.comment and include_comments else ""
+                )
+
+                if not day.shifts:
+                    report_data.append(
+                        (AnsiColors.red(date_string), AnsiColors.red(day.comment))
+                    )
                 else:
                     duration = (
                         day.current_duration()
@@ -248,6 +281,31 @@ class TimePeriod:
                 table,
             )
         )
+
+
+def lossless_round(
+    durations: dict[datetime.date, datetime.timedelta],
+) -> dict[datetime.date, datetime.timedelta]:
+    total_remainders = 0
+    remainders = []
+    rounded_durations = {}
+    total_remainders = 0
+    for date, duration in durations.items():
+        remainder = duration.total_seconds() % HALF_AN_HOUR
+        total_remainders += remainder
+        remainders.append((remainder, date))
+        rounded_durations[date] = duration - datetime.timedelta(seconds=remainder)
+    remainders.sort()
+
+    adjustment_budget, remainder = divmod(total_remainders, HALF_AN_HOUR)
+    if remainder:
+        return durations
+
+    for _ in range(int(adjustment_budget)):
+        remainder, date = remainders.pop()
+        rounded_durations[date] += datetime.timedelta(seconds=HALF_AN_HOUR)
+
+    return rounded_durations
 
 
 def mean_median_std(
