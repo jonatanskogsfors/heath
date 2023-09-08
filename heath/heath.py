@@ -16,15 +16,13 @@ from heath.time_period import CustomTimePeriod
 
 
 @click.group()
+@click.version_option()
 @click.option("-f", "--folder", type=Path, envvar="HEATH_FOLDER")
-@click.option("-V", "--validate", is_flag=True)
 @click.pass_context
-def cli(ctx, folder: Path, validate: bool):
+def cli(ctx, folder: Path):
     if not folder:
         folder = Path.cwd()
     ledger_folder = LedgerFolder(folder)
-    if validate:
-        print(str(ledger_folder) + "\n")
 
     if not ledger_folder.valid:
         sys.exit("Ledger folder not valid")
