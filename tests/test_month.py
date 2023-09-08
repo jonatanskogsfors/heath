@@ -338,26 +338,26 @@ def test_non_working_days_can_have_a_comment():
         ((), "\n"),
         ((), "1.\n"),
         ((), "1. # A comment.\n"),
-        ((), "1. Project\n"),
-        ((), "1. Project 8:00 -\n"),
-        ((), "1. Project 8:00 - 17:00\n"),
-        ((), "1. Project 8:00 - 17:00, Lunch 0:30\n"),
-        ((), "1. Project 8:00 - 17:00, Lunch 0:30 # A comment.\n"),
-        ((), "1. ProjectA 8:00 - 13:00, Lunch 0:30; ProjectB\n"),
-        ((), "1. ProjectA 8:00 - 13:00, Lunch 0:30; ProjectB 13:00 - 17:00\n"),
+        (("Project",), "1. Project\n"),
+        (("Project",), "1. Project 8:00 -\n"),
+        (("Project",), "1. Project 8:00 - 17:00\n"),
+        (("Project",), "1. Project 8:00 - 17:00, Lunch 0:30\n"),
+        (("Project",), "1. Project 8:00 - 17:00, Lunch 0:30 # A comment.\n"),
+        (("ProjectA", "ProjectB"), "1. ProjectA 8:00 - 13:00, Lunch 0:30; ProjectB\n"),
+        (("ProjectA", "ProjectB"), "1. ProjectA 8:00 - 13:00, Lunch 0:30; ProjectB 13:00 - 17:00\n"),
         (
-            (),
+            ("ProjectA", "ProjectB"),
             "1. ProjectA 8:00 - 13:00, Lunch 0:30; ProjectB 13:00 - 17:00 # A comment.\n",
         ),
         (
-            (),
+            ("Project",),
             """\
         1. Project 8:00 - 17:00, Lunch 1:00
         2. Project 8:30 -
         """,
         ),
         (
-            (),
+            ("ProjectA", "ProjectB", "ProjectC"),
             """\
         1. ProjectA 8:00 - 10:00; ProjectB 10:00 - 16:30, Lunch 1:00
         2. ProjectA 5:30 - 13:00 # Early bird catches the worm
@@ -369,12 +369,16 @@ def test_non_working_days_can_have_a_comment():
         ),
     ),
 )
-def test_month_string_identical_roundtrip(given_month_string):
+def test_month_string_identical_roundtrip(given_projects, given_month_string):
     # Given a month string
     given_month_string = dedent(given_month_string)
 
     # Given a ledger
     given_ledger = Ledger()
+
+    # Given known projects
+    for project in given_projects:
+        given_ledger.add_project(Project(project))
 
     # Given the wholeday project "Vacation"
     given_ledger.add_project(Project("Vacation", all_day=True))
