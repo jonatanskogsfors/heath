@@ -487,7 +487,7 @@ def test_various_day_strings_with_multiple_shifts(
             2022,
             1,
             "3. Project 8:00-17:00, lunch 1:00",
-            ("project",),
+            ("Project",),
             (),
             {date(2022, 1, 3)},
             1,
@@ -499,9 +499,10 @@ def test_various_day_strings_with_multiple_shifts(
             """3. Project1 8:00-17:00, lunch 1:00
 4. Project1 8:00-13:00, lunch 1:00; Project2 13:00-16:00""",
             (
-                "project1",
+                "Project1",
                 "Project2",
             ),
+            (),
             {date(2022, 1, 3), date(2022, 1, 4)},
             2,
             timedelta(hours=15),
@@ -513,7 +514,7 @@ def test_various_day_strings_with_multiple_shifts(
 2. Project2 9:00-17:00, lunch 0:30
 3. Semester
 4. Project1 10:00-12:30, lunch 0:30; Project2 12:30-15:00""",
-            ("project1", "Project2"),
+            ("Project1", "Project2"),
             ("Semester",),
             {date(2022, 3, 1), date(2022, 3, 2), date(2022, 3, 3), date(2022, 3, 4)},
             3,
