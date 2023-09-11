@@ -344,7 +344,10 @@ def test_non_working_days_can_have_a_comment():
         (("Project",), "1. Project 8:00 - 17:00, Lunch 0:30\n"),
         (("Project",), "1. Project 8:00 - 17:00, Lunch 0:30 # A comment.\n"),
         (("ProjectA", "ProjectB"), "1. ProjectA 8:00 - 13:00, Lunch 0:30; ProjectB\n"),
-        (("ProjectA", "ProjectB"), "1. ProjectA 8:00 - 13:00, Lunch 0:30; ProjectB 13:00 - 17:00\n"),
+        (
+            ("ProjectA", "ProjectB"),
+            "1. ProjectA 8:00 - 13:00, Lunch 0:30; ProjectB 13:00 - 17:00\n",
+        ),
         (
             ("ProjectA", "ProjectB"),
             "1. ProjectA 8:00 - 13:00, Lunch 0:30; ProjectB 13:00 - 17:00 # A comment.\n",
