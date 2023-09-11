@@ -58,12 +58,18 @@ class ProjectsFile(FileObject):
         self.path = folder_path / "projects.cfg"
 
 
+class ConfigFile(FileObject):
+    def __init__(self, folder_path: Path):
+        self.path = folder_path / "config.cfg"
+
+
 class LedgerFolder:
     def __init__(self, folder_path: Path):
         self.path = folder_path
         self._months = {}
         self._years = []
         self._projects = ProjectsFile(self.path)
+        self._config = ConfigFile(self.path)
 
     @property
     def valid(self) -> bool:
@@ -124,8 +130,12 @@ class LedgerFolder:
         return self._years
 
     @property
-    def projects(self) -> bool:
+    def projects(self) -> ProjectsFile:
         return self._projects
+
+    @property
+    def config(self) -> ConfigFile:
+        return self._config
 
     def __str__(self) -> str:
         strings = (

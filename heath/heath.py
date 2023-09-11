@@ -1,11 +1,13 @@
 import datetime
 import locale
+import subprocess
 import sys
 from pathlib import Path
 from typing import Optional
 
 import click
 from tabulate import tabulate
+from heath.config import Config
 
 from heath.day import Day
 from heath.exceptions import ProjectError
@@ -31,6 +33,7 @@ def cli(ctx, folder: Path):
     ctx.ensure_object(dict)
     ctx.obj["LEDGER"] = ledger
     ctx.obj["FOLDER"] = ledger_folder
+    ctx.obj["CONFIG"] = Config(ledger_folder.config.path)
 
     if ledger_folder.projects:
         ledger.parse_projects(ledger_folder.projects.content)
@@ -597,6 +600,32 @@ def comment(
 
         if verbose:
             print("\n" + ledger.last_day.report(include_comments=True) + "\n")
+
+
+@cli.command(help="Add comment for day.")
+@click.argument("month_number", type=click.IntRange(1, 12), required=False)
+@click.argument("year", type=int, required=False)
+@click.pass_context
+def edit(
+    ctx,
+    month_number: int,
+    year: int,
+):
+    ledger: Ledger = ctx.obj["LEDGER"]
+    folder: LedgerFolder = ctx.obj["FOLDER"]
+    config: Config = ctx.obj["CONFIG"]
+
+    editor = config.get("tools", "editor")
+
+    if (month := ledger.get_month(month_number, year)) and (
+        month_file := folder.months.get(month.key)
+    ):
+        subprocess.call([editor, str(month_file)])
+    else:
+        month_description = (
+            f"'{year}-{month_number}'" if year else f"'{month_number}' in current year"
+        )
+        sys.exit(f"Ledger has no month file for {month_description}.")
 
 
 def _write_month_to_disk(
