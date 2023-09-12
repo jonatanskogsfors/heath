@@ -6,9 +6,10 @@ from pathlib import Path
 from typing import Optional
 
 import click
+import git
 from tabulate import tabulate
-from heath.config import Config
 
+from heath.config import Config
 from heath.day import Day
 from heath.exceptions import ProjectError
 from heath.folder import LedgerFolder
@@ -626,6 +627,66 @@ def edit(
             f"'{year}-{month_number}'" if year else f"'{month_number}' in current year"
         )
         sys.exit(f"Ledger has no month file for {month_description}.")
+
+
+@cli.command(help="Commit edits to ledger repo.")
+@click.option("-m", "--commit-message", type=str, required=False)
+@click.pass_context
+def push(ctx, commit_message: Optional[str]):
+    ledger: Ledger = ctx.obj["LEDGER"]
+    folder: LedgerFolder = ctx.obj["FOLDER"]
+
+    try:
+        ledger_repo = git.Repo(folder.path)
+    except git.InvalidGitRepositoryError:
+        sys.exit(f"Ledger '{folder.path}' is not a git repository.")
+
+    already_staged = [
+        file.a_path for file in ledger_repo.index.diff(ledger_repo.head.commit)
+    ]
+    changed_files = [file.a_path for file in ledger_repo.index.diff(None)]
+    new_files = [
+        file for file in ledger_repo.untracked_files if Path(file) in folder.file_names
+    ]
+
+    if already_staged:
+        print("\nAlready staged files:")
+        for file in already_staged:
+            print(f" - {file}")
+    if changed_files:
+        print("\nChanged files:")
+        for file in changed_files:
+            print(f" - {file}")
+    if new_files:
+        print("\nNew files:")
+        for file in new_files:
+            print(f" - {file}")
+
+    if input("\nCommit? [Y/n]: ") in "jJyY":
+        for file in changed_files + new_files:
+            ledger_repo.index.add(file)
+
+        ledger_repo.index.commit(commit_message or ledger.today.date.isoformat())
+        origin = ledger_repo.remote()
+        origin.push(force_with_lease=True)
+    else:
+        sys.exit("Aborting")
+
+
+@cli.command(help="Pull from ledger repo.")
+@click.pass_context
+def pull(ctx):
+    folder: LedgerFolder = ctx.obj["FOLDER"]
+
+    try:
+        ledger_repo = git.Repo(folder.path)
+        origin = ledger_repo.remote()
+        origin.pull(rebase=True)
+
+    except git.GitCommandError as e:
+        sys.exit("Could not pull. Check git status.")
+    except git.InvalidGitRepositoryError:
+        sys.exit(f"Ledger '{folder.path}' is not a git repository.")
 
 
 def _write_month_to_disk(
