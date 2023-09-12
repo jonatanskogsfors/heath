@@ -602,7 +602,7 @@ def comment(
             print("\n" + ledger.last_day.report(include_comments=True) + "\n")
 
 
-@cli.command(help="Add comment for day.")
+@cli.command(help="Edit month file in external editor.")
 @click.argument("month_number", type=click.IntRange(1, 12), required=False)
 @click.argument("year", type=int, required=False)
 @click.pass_context
