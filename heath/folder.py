@@ -137,6 +137,14 @@ class LedgerFolder:
     def config(self) -> ConfigFile:
         return self._config
 
+    @property
+    def file_names(self) -> list[Path]:
+        paths = [m.path for m in self.months.values()] + [
+            self.projects.path,
+            self.config.path,
+        ]
+        return [path.relative_to(self.path) for path in paths]
+
     def __str__(self) -> str:
         strings = (
             f"Path: {self.path.absolute()}",
