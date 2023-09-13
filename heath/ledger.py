@@ -1,6 +1,5 @@
 from ast import parse
 from calendar import weekday
-import configparser
 import re
 import datetime
 from heath import exceptions
@@ -227,14 +226,5 @@ class Ledger:
             self.add_non_working_date(date, description)
 
     def parse_projects(self, project_string: str) -> None:
-        projects_config = configparser.ConfigParser()
-        projects_config.read_string(project_string)
-        for project_key in projects_config.sections():
-            project_data = projects_config[project_key]
-            new_project = Project(
-                project_key,
-                project_data["name"],
-                description=project_data.get("description"),
-                all_day=project_data.getboolean("all_day"),
-            )
-            self.add_project(new_project)
+        for project in Project.from_configuration_string(project_string):
+            self.add_project(project)

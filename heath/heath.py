@@ -9,6 +9,7 @@ import click
 import git
 from tabulate import tabulate
 
+from heath import completions
 from heath.config import Config
 from heath.day import Day
 from heath.exceptions import ProjectError
@@ -370,7 +371,7 @@ def projects(ctx):
 
 
 @cli.command(help="Start a new shift for a project.")
-@click.argument("project")
+@click.argument("project", shell_complete=completions.complete_projects)
 @click.argument("start_time")
 @click.option("-s", "--same-day", is_flag=True, help="Do not create a new day.")
 @click.option(
@@ -468,7 +469,7 @@ def stop(ctx, stop_time: str, dry_run: bool, verbose: bool):
 
 
 @cli.command(help="Switch to a new shift.")
-@click.argument("project")
+@click.argument("project", shell_complete=completions.complete_projects)
 @click.argument("start_time")
 @click.option(
     "-n",
@@ -507,7 +508,7 @@ def switch(ctx, project: str, start_time: str, dry_run: bool, verbose: bool):
 
 
 @cli.command(help="Add all day project for day")
-@click.argument("project")
+@click.argument("project", shell_complete=completions.complete_allday_projects)
 @click.argument("day_number", type=click.IntRange(1, 31), required=False)
 @click.argument("month_number", type=click.IntRange(1, 12), required=False)
 @click.argument("year", type=int, required=False)
