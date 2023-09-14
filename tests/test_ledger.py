@@ -1,5 +1,4 @@
 from datetime import date, datetime, time, timedelta
-from pydoc import describe
 from textwrap import dedent
 
 import pytest
@@ -788,7 +787,7 @@ def test_adding_non_working_days_when_corresponding_month_allready_are_added_rai
 def test_adding_a_project_makes_it_available():
     # Given a project with a description
     given_description = "THIS project"
-    given_project = Project("SpecificProject", description=given_description)
+    given_project = Project("SpecificProject", report=given_description)
 
     # Given a ledger
     given_ledger = Ledger()
@@ -807,15 +806,13 @@ def test_adding_a_project_makes_it_available():
     assert shift_project is given_project
 
     # And the description can be accessed
-    assert shift_project.description == given_description
+    assert shift_project.report == given_description
 
 
 def test_adding_an_all_day_project_makes_it_available():
     # Given an all day project with a description
     given_description = "All day long!"
-    given_all_day_project = Project(
-        "GoodTimes", description=given_description, all_day=True
-    )
+    given_all_day_project = Project("GoodTimes", report=given_description, all_day=True)
 
     # Given a ledger
     given_ledger = Ledger()
@@ -837,7 +834,7 @@ def test_adding_an_all_day_project_makes_it_available():
     assert shift_project is given_all_day_project
 
     # And the description can be accessed
-    assert shift_project.description == given_description
+    assert shift_project.report == given_description
 
 
 def test_parse_project_file_adds_projects():
@@ -857,14 +854,14 @@ def test_parse_project_file_adds_projects():
     # Given a projects string with the projects
     given_projects_string = f"""\
         [{given_all_day_project_key}]
-        name: {given_all_day_project_name}
-        description: {given_all_day_project_description}
-        all_day: true
+        Name: {given_all_day_project_name}
+        Report: {given_all_day_project_description}
+        AllDay: true
 
         [{given_ordinary_project_key}]
-        name: {given_ordinary_project_name}
-        description: {given_ordinary_project_description}
-        all_day: false
+        Name:  {given_ordinary_project_name}
+        Report:  {given_ordinary_project_description}
+        AllDay: False
         """
 
     # Given there are no projects added
@@ -884,11 +881,11 @@ def test_parse_project_file_adds_projects():
 
     assert all_day_project.all_day
     assert all_day_project.name == given_all_day_project_name
-    assert all_day_project.description == given_all_day_project_description
+    assert all_day_project.report == given_all_day_project_description
 
     assert not ordinary_project.all_day
     assert ordinary_project.name == given_ordinary_project_name
-    assert ordinary_project.description == given_ordinary_project_description
+    assert ordinary_project.report == given_ordinary_project_description
 
 
 def test_ledger_is_aware_of_next_work_date():

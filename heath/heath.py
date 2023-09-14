@@ -15,6 +15,7 @@ from heath.day import Day
 from heath.exceptions import ProjectError
 from heath.folder import LedgerFolder
 from heath.ledger import Ledger
+from heath.project import Project
 from heath.shift import Shift
 from heath.time_period import CustomTimePeriod
 
@@ -347,16 +348,22 @@ def day(
         print("No information for day.")
 
 
-@cli.command(help="List all known projects.")
+@cli.group(help="Handle projects.")
 @click.pass_context
 def projects(ctx):
+    pass
+
+
+@projects.command("ls", help="List all known projects.")
+@click.pass_context
+def projects_ls(ctx):
     ledger: Ledger = ctx.obj["LEDGER"]
     projects_data = [
         (
             project.key,
             project.name,
             ("No", "Yes")[project.all_day],
-            project.description,
+            project.report,
         )
         for project in sorted(ledger.projects.values(), key=lambda p: p.key)
     ]
@@ -364,10 +371,30 @@ def projects(ctx):
         "\n"
         + tabulate(
             projects_data,
-            headers=("Projekt", "Rapporteras som", "Heldag", "Beskrivning"),
+            headers=("ID", "Projekt", "Heldag", "Rapporteras som"),
         )
         + "\n"
     )
+
+
+@projects.command("add", help="Add a project.")
+@click.pass_context
+def projects_add(ctx):
+    ledger: Ledger = ctx.obj["LEDGER"]
+    folder: LedgerFolder = ctx.obj["FOLDER"]
+
+    project_id = _input_until(
+        "Id",
+        condition=lambda v: v and v not in ledger.projects,
+        error_msg="Id must be unique and not empty.",
+    )
+    project_name = _input_until("Name")
+    project_report = _input_until("Report as")
+    project_allday = _input_bool("All day", defaul_value=False)
+    new_project = Project(project_id, project_name, project_report, project_allday)
+
+    ledger.add_project(new_project)
+    folder.projects.write(ledger.export_projects())
 
 
 @cli.command(help="Start a new shift for a project.")
@@ -688,6 +715,32 @@ def pull(ctx):
         sys.exit("Could not pull. Check git status.")
     except git.InvalidGitRepositoryError:
         sys.exit(f"Ledger '{folder.path}' is not a git repository.")
+
+
+def _input_bool(prompt: str, defaul_value: bool = False):
+    default = " [Y/n]" if defaul_value else " [y/N]"
+    value = input(f"{prompt}{default}: ")
+    while value.lower() not in "yn":
+        value = input(f"{prompt}{default}: ")
+    if value.lower() == "y":
+        value = True
+    elif value.lower() == "n":
+        value = False
+    else:
+        value = defaul_value
+    return value
+
+
+def _input_until(
+    prompt: str, condition: Optional[callable] = None, error_msg: str = ""
+):
+    value = input(f"{prompt}: ")
+    if condition is not None:
+        while not condition(value):
+            if error_msg:
+                print(error_msg)
+            value = input(f"{prompt}: ")
+    return value
 
 
 def _write_month_to_disk(
