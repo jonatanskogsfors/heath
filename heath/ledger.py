@@ -228,3 +228,8 @@ class Ledger:
     def parse_projects(self, project_string: str) -> None:
         for project in Project.from_configuration_string(project_string):
             self.add_project(project)
+
+    def export_projects(self) -> str:
+        return Project.to_configuration_string(
+            sorted(self.projects.values(), key=lambda k: k.key)
+        )
