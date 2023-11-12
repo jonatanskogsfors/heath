@@ -115,14 +115,23 @@ class Day:
     ):
         if by_project:
             projects = defaultdict(datetime.timedelta)
+            all_day_projects = defaultdict(int)
+
             for shift in self.shifts:
-                if include_active_shift:
+                if shift.all_day:
+                    all_day_projects[shift.project.key] += 1
+                elif include_active_shift:
                     projects[shift.project.key] += shift.current_duration
                 else:
                     projects[shift.project.key] += shift.duration
             shift_data = sorted(
-                (project, pretty_duration(duration))
-                for project, duration in projects.items()
+                [
+                    (project, pretty_duration(duration))
+                    for project, duration in projects.items()
+                ] + [
+                    (project,)
+                    for project, days in all_day_projects.items()
+                ]
             )
         else:
             shift_data = (
@@ -161,13 +170,15 @@ class Day:
         return report_string
 
     def report_data_by_project(self, include_active_shift: bool = False):
+        projects = defaultdict(lambda: {"hours": datetime.timedelta(), "days": 0})
 
-        projects = defaultdict(datetime.timedelta)
         for shift in self.shifts:
-            if include_active_shift:
-                projects[shift.project.key] += shift.current_duration
+            if shift.all_day:
+                projects[shift.project.key]["days"] += 1
+            elif include_active_shift:
+                projects[shift.project.key]["hours"] += shift.current_duration
             else:
-                projects[shift.project.key] += shift.duration
+                projects[shift.project.key]["hours"] += shift.duration
         return sorted((project, duration) for project, duration in projects.items())
 
     def project_durations(self, include_active_shifts: bool = False):
@@ -176,11 +187,14 @@ class Day:
         for shift in [
             shift for shift in self.shifts if shift.completed or include_active_shifts
         ]:
-            projects[shift.project.key] += (
-                shift.duration
-                if shift.completed or not include_active_shifts
-                else shift.duration_at(now_by_the_minute)
-            )
+            if shift.all_day:
+                projects[shift.project.key] = None
+            else:
+                projects[shift.project.key] += (
+                    shift.duration
+                    if shift.completed or not include_active_shifts
+                    else shift.duration_at(now_by_the_minute)
+                )
         return projects
 
     def overview(self, week_balance: tuple[str, datetime.timedelta] = None):
