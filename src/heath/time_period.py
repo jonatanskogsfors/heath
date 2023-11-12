@@ -6,7 +6,7 @@ from typing import Collection, Optional
 from tabulate import tabulate
 
 from heath.day import Day
-from heath.time_utils import pretty_duration, time_to_seconds
+from heath.time_utils import pretty_duration, time_to_seconds, pretty_days
 
 HALF_AN_HOUR = 60 * 30
 
@@ -213,16 +213,18 @@ class TimePeriod:
         return report_data
 
     def _report_data_for_project_totals(self, include_active_day):
-        projects = defaultdict(datetime.timedelta)
+        projects = defaultdict(lambda: {"hours": datetime.timedelta(), "days": 0})
+
         day_data = [
             day.report_data_by_project(include_active_shift=include_active_day)
             for day in self.all_days
         ]
         for day in day_data:
             for project, duration in day:
-                projects[project] += duration
+                projects[project]["days"] += duration["days"]
+                projects[project]["hours"] += duration["hours"]
         return [
-            (project, pretty_duration(duration).rjust(6))
+            (project, pretty_days(duration["days"]).rjust(6), "d") if duration["days"] else (project, pretty_duration(duration["hours"]).rjust(6))
             for project, duration in projects.items()
         ]
 
