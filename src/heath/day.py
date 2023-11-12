@@ -1,10 +1,12 @@
 from collections import defaultdict
 import datetime
 from typing import Optional
+
+import tabulate
+
 from heath.exceptions import DateInconsistencyError, DayInconsistencyError, DayError
 from heath.shift import Shift
 from heath.time_utils import pretty_duration, pretty_time
-import tabulate
 
 tabulate.PRESERVE_WHITESPACE = True
 

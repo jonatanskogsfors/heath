@@ -1,6 +1,5 @@
 import datetime
 
-
 def pretty_duration(delta: datetime.timedelta, round_seconds: bool = False):
     if delta is None:
         return ""

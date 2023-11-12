@@ -1,7 +1,8 @@
-from datetime import date, datetime
-import pytest
-from heath import time_utils
 import datetime
+
+import pytest
+
+from heath import time_utils
 
 
 @pytest.mark.parametrize(
@@ -68,6 +69,6 @@ def test_pretty_duration_with_rounding(
     given_duration: datetime.timedelta, expected_string: str
 ):
     assert (
-        time_utils.pretty_duration(given_duration, round_seconds=True)
-        == expected_string
+            time_utils.pretty_duration(given_duration, round_seconds=True)
+            == expected_string
     )
