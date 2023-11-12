@@ -1,11 +1,9 @@
-from ast import parse
-from calendar import weekday
 import re
 import datetime
-from heath import exceptions
 
-from heath.month import Month
+from heath import exceptions
 from heath.day import Day
+from heath.month import Month
 from heath.project import Project
 from heath.shift import Shift
 from heath.time_period import CustomTimePeriod

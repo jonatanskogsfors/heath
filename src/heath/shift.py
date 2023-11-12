@@ -1,4 +1,5 @@
 import datetime
+
 from heath.exceptions import ShiftConsistencyError, ShiftError
 from heath.project import Project
 from heath.time_utils import pretty_duration, pretty_time

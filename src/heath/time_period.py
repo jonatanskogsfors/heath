@@ -1,10 +1,12 @@
 from collections import defaultdict
 import datetime
-from typing import Collection, Optional
-from heath.day import Day
-from tabulate import tabulate
-from heath.time_utils import pretty_duration, time_to_seconds
 import statistics
+from typing import Collection, Optional
+
+from tabulate import tabulate
+
+from heath.day import Day
+from heath.time_utils import pretty_duration, time_to_seconds
 
 HALF_AN_HOUR = 60 * 30
 
