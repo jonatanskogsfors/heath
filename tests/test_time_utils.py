@@ -69,6 +69,6 @@ def test_pretty_duration_with_rounding(
     given_duration: datetime.timedelta, expected_string: str
 ):
     assert (
-            time_utils.pretty_duration(given_duration, round_seconds=True)
-            == expected_string
+        time_utils.pretty_duration(given_duration, round_seconds=True)
+        == expected_string
     )

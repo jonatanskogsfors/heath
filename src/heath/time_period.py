@@ -224,7 +224,9 @@ class TimePeriod:
                 projects[project]["days"] += duration["days"]
                 projects[project]["hours"] += duration["hours"]
         return [
-            (project, pretty_days(duration["days"]).rjust(6), "d") if duration["days"] else (project, pretty_duration(duration["hours"]).rjust(6))
+            (project, pretty_days(duration["days"]).rjust(6), "d")
+            if duration["days"]
+            else (project, pretty_duration(duration["hours"]).rjust(6))
             for project, duration in projects.items()
         ]
 
@@ -318,6 +320,9 @@ def lossless_round(
     rounded_durations = {}
     total_remainders = 0
     for date, duration in durations.items():
+        if duration is None:
+            rounded_durations[date] = None
+            continue
         remainder = duration.total_seconds() % HALF_AN_HOUR
         total_remainders += remainder
         remainders.append((remainder, date))
