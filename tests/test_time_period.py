@@ -6,7 +6,11 @@ from heath.day import Day
 from heath.project import Project
 from heath.time_period import TimePeriod, lossless_round
 
-from tests.utilities import given_completed_shift_for_project_between_times
+from tests.utilities import (
+    given_completed_day_for_date,
+    given_completed_shift_for_project_between_times,
+    given_all_day_project_on_date,
+)
 
 
 def test_get_project_durations_for_time_period():
@@ -207,6 +211,31 @@ def test_lossless_round_on_non_compliant_data_returns_input_unchanged(given_dura
 
     # Then the input is returned
     assert rounded_durations == given_durations
+
+
+def test_lossless_round_should_not_raise_on_all_day_projects():
+    # Given an all day project and a regular project
+    given_all_day_project = Project("AllDayProject", all_day=True)
+    given_regular_project = Project("RegularProject")
+
+    # Given two sequential dates
+    given_date_1 = datetime.date(2023, 9, 5)
+    given_date_2 = datetime.date(2023, 9, 6)
+
+    # Given the first day has the all day project
+    day_1 = given_all_day_project_on_date(given_date_1, given_all_day_project)
+
+    # Given the second day has completed shift with the regular project
+    day_2 = given_completed_day_for_date(given_date_2, given_regular_project)
+
+    # Given a time period with the two days
+    given_time_period = SimpleTimePeriod([day_1, day_2])
+
+    # When requesting a report by project, using lossless round
+    report = given_time_period.report(by_project=True, round_project_durations=True)
+
+    # Then the function should not raise and return something
+    assert report
 
 
 class SimpleTimePeriod(TimePeriod):

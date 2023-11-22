@@ -128,10 +128,8 @@ class Day:
                 [
                     (project, pretty_duration(duration))
                     for project, duration in projects.items()
-                ] + [
-                    (project,)
-                    for project, days in all_day_projects.items()
                 ]
+                + [(project,) for project, days in all_day_projects.items()]
             )
         else:
             shift_data = (
