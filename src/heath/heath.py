@@ -18,6 +18,7 @@ from heath.ledger import Ledger
 from heath.project import Project
 from heath.shift import Shift
 from heath.time_period import CustomTimePeriod
+from heath import exceptions
 
 
 @click.group()
@@ -45,8 +46,11 @@ def cli(ctx, folder: Path):
         ledger.parse_year(year_file.year, year_file.content)
 
     for month_file in ledger_folder.ordered_months:
-        ledger.parse_month(month_file.year, month_file.month, month_file.content)
-
+        try:
+            ledger.parse_month(month_file.year, month_file.month, month_file.content)
+        except exceptions.HeathError as e:
+            raise exceptions.HeathError(f"Could not parse exising ledger. {e}")
+    
 
 @cli.command(help="Show ledger for year.")
 @click.argument("year", type=int, required=False)
@@ -758,7 +762,12 @@ def _write_month_to_disk(
 
 def main():
     locale.setlocale(locale.LC_TIME, "")
-    cli(obj={})
+    try:
+        cli(obj={})
+    except exceptions.HeathError as e:
+        print(e)
+    except Exception as e:
+        print(f"Unexpected error! Contemplate the following internal error:\n\"{e}\"")
 
 
 if __name__ == "__main__":
