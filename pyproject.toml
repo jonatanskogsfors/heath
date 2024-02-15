@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "heath"
-version = "0.1.12"
+version = "2024.1-beta.3"
 description = ""
 authors = ["Jonatan Skogsfors <jonatan@skogsfors.net>"]
 
