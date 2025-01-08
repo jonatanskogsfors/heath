@@ -994,6 +994,27 @@ def test_subsequent_months_can_not_start_in_the_middle_of_a_month():
         given_ledger.add_day(given_day)
 
 
+@pytest.mark.parametrize(
+    "given_year, expected_first_date_for_week_1",
+    (
+        (2023, "2023-01-02"),
+        (2024, "2024-01-01"),
+        (2025, "2024-12-30"),
+        (2026, "2025-12-29"),
+        (2027, "2027-01-04"),
+    ),
+)
+def test_get_week_uses_iso_8601_week_numbers(given_year, expected_first_date_for_week_1):
+    # Given a ledger
+    given_ledger = Ledger()
+
+    # When requesting week 1
+    week_1 = given_ledger.get_week(1, given_year)
+
+    # Then the first day of week 1 should be the expected date
+    assert week_1.first_date == date.fromisoformat(expected_first_date_for_week_1)
+
+
 # def test_bad_month_file_raises()
 # def test_bad_year_file_raises()
 # def test_bad_project_file_raises()
