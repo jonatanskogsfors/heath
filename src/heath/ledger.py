@@ -66,9 +66,9 @@ class Ledger:
         next_month_year = self.current_month.year + (next_month > 12)
         next_month = (next_month - 1) % 12 + 1
         temporary_month = Month(next_month_year, next_month)
-        for date, desciption in self.non_working_dates.get(next_month_year, {}).items():
+        for date, description in self.non_working_dates.get(next_month_year, {}).items():
             if date.month == next_month:
-                temporary_month.add_non_working_date(date, desciption)
+                temporary_month.add_non_working_date(date, description)
         return temporary_month.next_work_date
 
     def get_day(self, day_number, month_number=None, year=None) -> Day:
@@ -78,8 +78,8 @@ class Ledger:
     def get_week(self, week_number, year=None) -> CustomTimePeriod:
         year = year or datetime.date.today().year
         week_string = f"{year}-{week_number:02}"
-        monday = datetime.datetime.strptime(f"{week_string}-1", "%Y-%W-%u")
-        sunday = datetime.datetime.strptime(f"{week_string}-7", "%Y-%W-%u")
+        monday = datetime.datetime.strptime(f"{week_string}-1", "%G-%V-%u")
+        sunday = datetime.datetime.strptime(f"{week_string}-7", "%G-%V-%u")
 
         title = f"Vecka {week_number}, {year}"
 
