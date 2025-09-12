@@ -1,10 +1,10 @@
-from collections import defaultdict
 import datetime
+from collections import defaultdict
 from typing import Optional
 
 import tabulate
 
-from heath.exceptions import DateInconsistencyError, DayInconsistencyError, DayError
+from heath.exceptions import DateInconsistencyError, DayError, DayInconsistencyError
 from heath.shift import Shift
 from heath.time_utils import pretty_duration, pretty_time
 
@@ -13,7 +13,10 @@ tabulate.PRESERVE_WHITESPACE = True
 
 class Day:
     def __init__(
-        self, date: datetime.date, comment: str = None, non_working_day: bool = False
+        self,
+        date: datetime.date,
+        comment: str | None = None,
+        non_working_day: bool = False,
     ):
         if not isinstance(date, datetime.date):
             raise DayError("A date must be given.")
@@ -50,21 +53,15 @@ class Day:
 
     @property
     def lunch(self) -> datetime.timedelta:
-        return sum(
-            (shift.lunch_duration for shift in self.shifts), datetime.timedelta()
-        )
+        return sum((shift.lunch_duration for shift in self.shifts), datetime.timedelta())
 
     @property
     def worked_hours(self) -> datetime.timedelta:
-        return sum(
-            (shift.duration for shift in self.shifts), start=datetime.timedelta()
-        )
+        return sum((shift.duration for shift in self.shifts), start=datetime.timedelta())
 
     @property
     def projects(self):
-        return list(
-            {shift.project.key: shift.project for shift in self.shifts}.values()
-        )
+        return list({shift.project.key: shift.project for shift in self.shifts}.values())
 
     @property
     def all_day_project_name(self):
@@ -195,7 +192,7 @@ class Day:
                 )
         return projects
 
-    def overview(self, week_balance: tuple[str, datetime.timedelta] = None):
+    def overview(self, week_balance: tuple[str, datetime.timedelta] | None = None):
         if self.completed:
             data = [
                 ("Starttid", pretty_time(self.start_time).rjust(5)),
@@ -230,9 +227,7 @@ class Day:
                 ("Starttid", pretty_time(self.start_time).rjust(5)),
                 (
                     "Lunchlängd",
-                    pretty_duration(self.lunch).rjust(5)
-                    if self.lunch
-                    else "-".center(5),
+                    pretty_duration(self.lunch).rjust(5) if self.lunch else "-".center(5),
                 ),
                 (
                     "Arbetade timmar",

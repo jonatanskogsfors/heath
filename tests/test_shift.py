@@ -1,10 +1,10 @@
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 
 import pytest
 
-from heath.shift import Shift
-from heath.project import Project
 from heath.exceptions import ShiftConsistencyError, ShiftError
+from heath.project import Project
+from heath.shift import Shift
 
 
 def test_create_a_minimal_shift():

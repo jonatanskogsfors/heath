@@ -4,15 +4,14 @@ from textwrap import dedent
 import pytest
 
 from heath.day import Day
-from heath.ledger import Ledger
-from heath.month import Month
 from heath.exceptions import (
     MonthDateInconsistencyError,
     MonthPreviousDayNotCompletedError,
 )
+from heath.ledger import Ledger
+from heath.month import Month
 from heath.project import Project
 from heath.shift import Shift
-
 from tests.utilities import (
     given_completed_day_for_date,
     given_completed_shift_for_date,
@@ -72,9 +71,7 @@ def test_if_first_day_skips_workday_the_month_raises():
 
     # Given day after first workday date
     given_first_workdate = datetime.date(2022, 1, 3)
-    given_second_workdate = given_first_workdate.replace(
-        day=given_first_workdate.day + 1
-    )
+    given_second_workdate = given_first_workdate.replace(day=given_first_workdate.day + 1)
 
     # Given a day on the date after the given date
     given_day = Day(given_second_workdate)
@@ -91,9 +88,7 @@ def test_explicitly_skipping_workdays_can_be_ok_for_first_day_in_month():
 
     # Given day after first workday date
     given_first_workdate = datetime.date(2023, 8, 1)
-    given_second_workdate = given_first_workdate.replace(
-        day=given_first_workdate.day + 1
-    )
+    given_second_workdate = given_first_workdate.replace(day=given_first_workdate.day + 1)
 
     # Given a day on the date after the given date
     given_day = Day(given_second_workdate)
@@ -368,7 +363,7 @@ def test_non_working_days_can_have_a_comment():
         4. ProjectB 8:00 - 13:00, Lunch 0:30; ProjectC 13:00 - 15:00; ProjectA 15:00 - 16:30
         7. Vacation # Finally!
         8. Vacation
-        """,
+        """,  # noqa: E501
         ),
     ),
 )

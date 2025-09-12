@@ -1,5 +1,5 @@
-import re
 import datetime
+import re
 
 from heath import exceptions
 from heath.day import Day
@@ -9,9 +9,9 @@ from heath.shift import Shift
 from heath.time_period import CustomTimePeriod
 
 COMMENT_PATTERN = re.compile("#.*")
-DAY_PATTERN = re.compile("(\d+)\.\s*(.+)?")
+DAY_PATTERN = re.compile(r"(\d+)\.\s*(.+)?")
 SHIFT_PATTERN = re.compile(
-    "(\w+)(?:\s+(?:(\d+:\d+)(?:\s*-\s*(\d+:\d+)?)?\s*(?:,\s*Lunch\s*(\d+:\d+)?)?)?)?",
+    r"(\w+)(?:\s+(?:(\d+:\d+)(?:\s*-\s*(\d+:\d+)?)?\s*(?:,\s*Lunch\s*(\d+:\d+)?)?)?)?",
     flags=re.IGNORECASE,
 )
 
@@ -90,9 +90,7 @@ class Ledger:
             title=title,
         )
 
-    def get_custom_time_period(
-        self, start_date: datetime.date, end_date: datetime.date
-    ):
+    def get_custom_time_period(self, start_date: datetime.date, end_date: datetime.date):
         return CustomTimePeriod(
             start_date,
             end_date,
@@ -215,8 +213,7 @@ class Ledger:
             date = datetime.date.fromisoformat(date_string.strip())
             if date.year != year:
                 raise exceptions.DateInconsistencyError(
-                    "Non working date in year file is outside year. "
-                    f"{date} not in {year}"
+                    f"Non working date in year file is outside year. {date} not in {year}"
                 )
             non_working_dates[date] = description.strip()
 
