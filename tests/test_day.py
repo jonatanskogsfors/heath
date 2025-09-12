@@ -1,10 +1,11 @@
 import datetime
+
 import pytest
 
 from heath.day import Day
-from heath.shift import Shift
-from heath.project import Project
 from heath.exceptions import DayError, DayInconsistencyError
+from heath.project import Project
+from heath.shift import Shift
 
 
 def test_day_must_be_initialized_with_date():

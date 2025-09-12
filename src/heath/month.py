@@ -45,9 +45,7 @@ class Month(TimePeriod):
         )
 
     def days_for_project(self, project_name: str):
-        return len(
-            [day for day in self.days if day.all_day_project_name == project_name]
-        )
+        return len([day for day in self.days if day.all_day_project_name == project_name])
 
     def add_day(self, new_day: Day, allow_late_start: bool = False):
         if any(not day.completed for day in self._days):
@@ -71,7 +69,7 @@ class Month(TimePeriod):
         self._days.append(new_day)
 
     def add_non_working_date(
-        self, non_working_date: datetime.date, comment: str = None
+        self, non_working_date: datetime.date, comment: str | None = None
     ):
         non_working_day = Day(non_working_date, comment, non_working_day=True)
         self._non_working_dates[non_working_date] = non_working_day

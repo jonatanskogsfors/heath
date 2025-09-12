@@ -91,9 +91,7 @@ class Shift:
                 f"{stop_time.date()} not in ({self.date}, {next_date})"
             )
         if stop_time < (self.start_time + self.lunch_duration):
-            raise ShiftConsistencyError(
-                "Shift can't be stopped before start plus lunch."
-            )
+            raise ShiftConsistencyError("Shift can't be stopped before start plus lunch.")
         self._stop_time = stop_time
 
     def report_data(self, include_active_shift: bool = False):

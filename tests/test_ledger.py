@@ -7,7 +7,6 @@ from heath import exceptions
 from heath.ledger import Ledger
 from heath.month import Month
 from heath.project import Project
-
 from tests import utilities
 
 
@@ -133,7 +132,8 @@ def test_day_with_comment_can_be_parsed():
 
 
 @pytest.mark.parametrize(
-    "given_day_string, expected_day, expected_project, expected_start, expected_stop, expected_lunch, expected_duration",
+    "given_day_string, expected_day, expected_project, expected_start, expected_stop,"
+    "expected_lunch, expected_duration",
     [
         (
             "1. Project1",
@@ -272,7 +272,7 @@ def test_unknown_projects_are_rejected():
     assert len(given_ledger.projects) == 0
 
     # Given a day string with a project
-    given_day_string = f"1. ProjectX 8:00 - 17:00. Lunch 1:00"
+    given_day_string = "1. ProjectX 8:00 - 17:00. Lunch 1:00"
 
     # When parsing the string
     # Then the ledger raises
@@ -315,7 +315,8 @@ def test_known_projects_are_used():
 
 
 @pytest.mark.parametrize(
-    "given_projects, given_day_string, expected_day, expected_shifts, expected_worked_hours",
+    "given_projects, given_day_string, expected_day, expected_shifts,"
+    "expected_worked_hours",
     [
         (
             ("Project1", "Project2"),
@@ -383,7 +384,8 @@ def test_known_projects_are_used():
         ),
         (
             ("Project1", "Project2", "Project3"),
-            "1. Project1 8:00 - 10:00; Project2 10:00 - 14:00, Lunch 1:00; Project3 14:00 - 17:00",
+            "1. Project1 8:00 - 10:00; Project2 10:00 - 14:00, Lunch 1:00;\
+                Project3 14:00 - 17:00",
             1,
             (
                 ("Project1", time(8), time(10), timedelta(), timedelta(hours=2)),
@@ -455,9 +457,7 @@ def test_various_day_strings_with_multiple_shifts(
         assert parsed_shift.duration == expected_shift[4]
 
     # And the day has the correct projects
-    assert {p.key for p in parsed_day.projects} == {
-        shift[0] for shift in expected_shifts
-    }
+    assert {p.key for p in parsed_day.projects} == {shift[0] for shift in expected_shifts}
 
     # And the day has the correct start time
     expected_start = (
@@ -480,7 +480,8 @@ def test_various_day_strings_with_multiple_shifts(
 
 
 @pytest.mark.parametrize(
-    "given_year, given_month, given_month_string, given_projects, given_all_day_projects, expected_dates, expected_projects, expected_worked_hours",
+    "given_year, given_month, given_month_string, given_projects, "
+    "given_all_day_projects, expected_dates, expected_projects, expected_worked_hours",
     [
         (
             2022,
@@ -652,7 +653,7 @@ def test_year_file_with_only_comments_does_nothing():
             # i
              # o
               # n
-    
+
     """
 
     # When parsing the year string
@@ -1026,24 +1027,24 @@ EXAMPLE_MONTH = """\
     4. Project1 9:00 - 18:00, Lunch 0:30
 
     7. Project2 9:15 - 16:45, Lunch 0:30
-    8. Vacation  # Needed a break 
+    8. Vacation  # Needed a break
     9. Vacation
     10. Project2 9:05 - 17:30, Lunch 0:30
     11. Project1 9:00 - 13:00, Lunch 0:30; Project2 13:00 - 15:00; Project3 15:00-17:30
-    
+
     14. Project1 9:00 - 13:00, Lunch 0:30; Project2 13:00 - 17:30
     15. Project2 9:00 - 13:00, Lunch 1:30; Project1 13:00 - 17:15
     16. Project1 9:00 - 14:00, Lunch 0:30; Project3 15:00 - 17:30
     17. SickLeave
     18. Project1 9:00 - 11:00; Project2 11:00 - 17:30, Lunch 0:30
-    
+
     # Working from home this week
     21. Project3 9:00 - 17:15, Lunch 0:30
     22. Project2 9:00 - 17:50, Lunch 0:30
     23. Project1 10:00 - 18:10, Lunch 1:00 ### Doctor's visit ###
     24. Project2 8:45 - 17:55, Lunch 0:40
-    25. Project1 8:00 - 16:05, Lunch 0:30 # Project1 8:30 - 17:00; Lunch 0:30 
-    
+    25. Project1 8:00 - 16:05, Lunch 0:30 # Project1 8:30 - 17:00; Lunch 0:30
+
     28. Project2 9:00 - 17:30, Lunch 0:30
     """
 

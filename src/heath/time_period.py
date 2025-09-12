@@ -1,12 +1,12 @@
-from collections import defaultdict
 import datetime
 import statistics
+from collections import defaultdict
 from typing import Collection, Optional
 
 from tabulate import tabulate
 
 from heath.day import Day
-from heath.time_utils import pretty_duration, time_to_seconds, pretty_days
+from heath.time_utils import pretty_days, pretty_duration, time_to_seconds
 
 HALF_AN_HOUR = 60 * 30
 
@@ -175,9 +175,7 @@ class TimePeriod:
         include_comments: bool,
         round_project_durations: bool,
     ):
-        project_durations = self.project_durations(
-            include_active_day=include_active_day
-        )
+        project_durations = self.project_durations(include_active_day=include_active_day)
         if round_project_durations:
             for project, durations in project_durations.items():
                 project_durations[project] = lossless_round(durations)
@@ -254,11 +252,7 @@ class TimePeriod:
         )
 
         stop_stats = mean_median_std(
-            [
-                time_to_seconds(day.stop_time.time())
-                for day in self.days
-                if day.stop_time
-            ]
+            [time_to_seconds(day.stop_time.time()) for day in self.days if day.stop_time]
         )
 
         lunch_stats = mean_median_std(

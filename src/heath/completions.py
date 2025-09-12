@@ -11,7 +11,8 @@ def complete_projects(ctx, param, incomplete: str, all_day: bool = False):
         return [
             project.key
             for project in projects
-            if project.key.lower().startswith(incomplete.lower()) and project.all_day == all_day
+            if project.key.lower().startswith(incomplete.lower())
+            and project.all_day == all_day
         ]
     return []
 

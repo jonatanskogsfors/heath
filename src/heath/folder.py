@@ -1,5 +1,5 @@
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Optional
 
 
@@ -22,7 +22,7 @@ class FileObject:
 
 
 class YearFile(FileObject):
-    PATTERN = re.compile("(\d{4})\.txt")
+    PATTERN = re.compile(r"(\d{4})\.txt")
 
     @property
     def year(self) -> Optional[int]:
@@ -32,7 +32,7 @@ class YearFile(FileObject):
 
 
 class MonthFile(FileObject):
-    PATTERN = re.compile("(\d{4})-(\d{1,2})\.txt")
+    PATTERN = re.compile(r"(\d{4})-(\d{1,2})\.txt")
 
     @property
     def month(self):

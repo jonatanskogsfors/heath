@@ -9,7 +9,7 @@ import click
 import git
 from tabulate import tabulate
 
-from heath import completions
+from heath import completions, exceptions
 from heath.config import Config
 from heath.day import Day
 from heath.exceptions import ProjectError
@@ -18,7 +18,6 @@ from heath.ledger import Ledger
 from heath.project import Project
 from heath.shift import Shift
 from heath.time_period import CustomTimePeriod
-from heath import exceptions
 
 
 @click.group()
@@ -50,7 +49,7 @@ def cli(ctx, folder: Path):
             ledger.parse_month(month_file.year, month_file.month, month_file.content)
         except exceptions.HeathError as e:
             raise exceptions.HeathError(f"Could not parse exising ledger. {e}")
-    
+
 
 @cli.command(help="Show ledger for year.")
 @click.argument("year", type=int, required=False)
@@ -306,9 +305,7 @@ def week(
     is_flag=True,
     help="Show current duration for any non complete shift.",
 )
-@click.option(
-    "-c", "--include-comments", is_flag=True, help="Show any comment for day."
-)
+@click.option("-c", "--include-comments", is_flag=True, help="Show any comment for day.")
 @click.option("-p", "--by-project", is_flag=True, help="Sum worked hours by project.")
 @click.option("-o", "--overview", is_flag=True, help="Brief overview of day.")
 @click.pass_context
@@ -715,7 +712,7 @@ def pull(ctx):
         origin = ledger_repo.remote()
         origin.pull(rebase=True)
 
-    except git.GitCommandError as e:
+    except git.GitCommandError:
         sys.exit("Could not pull. Check git status.")
     except git.InvalidGitRepositoryError:
         sys.exit(f"Ledger '{folder.path}' is not a git repository.")
@@ -735,9 +732,7 @@ def _input_bool(prompt: str, defaul_value: bool = False):
     return value
 
 
-def _input_until(
-    prompt: str, condition: Optional[callable] = None, error_msg: str = ""
-):
+def _input_until(prompt: str, condition: Optional[callable] = None, error_msg: str = ""):
     value = input(f"{prompt}: ")
     if condition is not None:
         while not condition(value):
@@ -767,7 +762,7 @@ def main():
     except exceptions.HeathError as e:
         print(e)
     except Exception as e:
-        print(f"Unexpected error! Contemplate the following internal error:\n\"{e}\"")
+        print(f'Unexpected error! Contemplate the following internal error:\n"{e}"')
 
 
 if __name__ == "__main__":

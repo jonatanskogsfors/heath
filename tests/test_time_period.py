@@ -5,11 +5,10 @@ import pytest
 from heath.day import Day
 from heath.project import Project
 from heath.time_period import TimePeriod, lossless_round
-
 from tests.utilities import (
+    given_all_day_project_on_date,
     given_completed_day_for_date,
     given_completed_shift_for_project_between_times,
-    given_all_day_project_on_date,
 )
 
 

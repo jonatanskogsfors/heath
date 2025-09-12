@@ -25,9 +25,7 @@ def given_completed_shift_for_date(
     )
 
 
-def given_completed_day_for_date(
-    day_date: datetime.date, project: Project = None
-) -> Day:
+def given_completed_day_for_date(day_date: datetime.date, project: Project = None) -> Day:
     new_day = Day(day_date)
     new_day.add_shift(given_completed_shift_for_date(day_date, project))
     return new_day
