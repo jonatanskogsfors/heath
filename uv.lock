@@ -76,7 +76,7 @@ wheels = [
 
 [[package]]
 name = "heath"
-version = "0.1.12"
+version = "2025.1b2"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
