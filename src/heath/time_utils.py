@@ -1,4 +1,9 @@
 import datetime
+import re
+
+from heath.exceptions import TimeError
+
+TIME_PATTERN = re.compile(r"(2[0-3])|([0-1]?[0-9])(:[0-5][0-9](:[0-5][0-9])?)?")
 
 
 def pretty_duration(duration: datetime.timedelta, round_seconds: bool = False):
@@ -26,3 +31,23 @@ def pretty_days(days: int) -> str:
 
 def time_to_seconds(time: datetime.time | datetime.datetime):
     return time.hour * 3600 + time.minute * 60 + time.second
+
+
+def parse_time(time_string: str) -> datetime.time:
+    if not TIME_PATTERN.fullmatch(time_string):
+        raise TimeError(f"Could not parse time string '{time_string}'.")
+    return datetime.time(*(int(number) for number in time_string.split(":")))
+
+
+def parse_duration(duration_string: str) -> datetime.timedelta:
+    if not TIME_PATTERN.fullmatch(duration_string):
+        raise TimeError(f"Could not parse duration string '{duration_string}'.")
+
+    return datetime.timedelta(
+        **dict(
+            zip(
+                ("hours", "minutes", "seconds"),
+                (int(number) for number in duration_string.split(":")),
+            )
+        )
+    )
