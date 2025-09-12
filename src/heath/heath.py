@@ -9,7 +9,7 @@ import click
 import git
 from tabulate import tabulate
 
-from heath import completions, exceptions
+from heath import completions, exceptions, time_utils
 from heath.config import Config
 from heath.day import Day
 from heath.exceptions import ProjectError
@@ -424,7 +424,7 @@ def start(
     new_shift = Shift(ledger.get_project(project), ledger.last_day.date)
     start_datetime = datetime.datetime.combine(
         new_shift.date,
-        datetime.time(*(int(number) for number in start_time.split(":"))),
+        time_utils.parse_time(start_time),
     )
     new_shift.start(start_datetime)
     ledger.last_day.add_shift(new_shift)
@@ -453,9 +453,8 @@ def lunch(ctx, lunch_duration: str, dry_run: bool, verbose: bool):
     folder: LedgerFolder = ctx.obj["FOLDER"]
     verbose |= dry_run
 
-    hours, minutes = map(int, lunch_duration.split(":"))
-    lunch_timedelta = datetime.timedelta(hours=hours, minutes=minutes)
-    ledger.current_shift.lunch(lunch_timedelta)
+    lunch_duration = time_utils.parse_duration(lunch_duration)
+    ledger.current_shift.lunch(lunch_duration)
 
     if not dry_run:
         _write_month_to_disk(
@@ -483,7 +482,7 @@ def stop(ctx, stop_time: str, dry_run: bool, verbose: bool):
 
     stop_datetime = datetime.datetime.combine(
         ledger.last_day.date,
-        datetime.time(*(int(number) for number in stop_time.split(":"))),
+        time_utils.parse_time(stop_time),
     )
     ledger.current_shift.stop(stop_datetime)
 
@@ -518,7 +517,7 @@ def switch(ctx, project: str, start_time: str, dry_run: bool, verbose: bool):
     new_shift = Shift(ledger.get_project(project), ledger.last_day.date)
     switch_datetime = datetime.datetime.combine(
         new_shift.date,
-        datetime.time(*(int(number) for number in start_time.split(":"))),
+        time_utils.parse_time(start_time),
     )
 
     ledger.current_shift.stop(switch_datetime)

@@ -3,6 +3,7 @@ import datetime
 import pytest
 
 from heath import time_utils
+from heath.exceptions import TimeError
 
 
 @pytest.mark.parametrize(
@@ -71,3 +72,77 @@ def test_pretty_duration_with_rounding(
     assert (
         time_utils.pretty_duration(given_duration, round_seconds=True) == expected_string
     )
+
+
+@pytest.mark.parametrize(
+    "given_time_string, expected_time",
+    (
+        ("0:00", datetime.time(0)),
+        ("00:00", datetime.time(0)),
+        ("1:23", datetime.time(1, 23)),
+        ("01:23", datetime.time(1, 23)),
+        ("01:23:45", datetime.time(1, 23, 45)),
+        ("8", datetime.time(8)),
+    ),
+)
+def test_parse_time(given_time_string, expected_time):
+    # When parsing user input string
+    parsed_time = time_utils.parse_time(given_time_string)
+
+    # Then the correct time is created
+    assert parsed_time == expected_time
+
+
+@pytest.mark.parametrize(
+    "given_time_string",
+    (
+        "",
+        "000:00",  # Too many leading zeros
+        "1:23:45:67",  # Beyond second precision
+        "24:00",
+        "12:60",
+        "12:34:60",
+        "8:50am",
+        "0_05",  # Real world case that was accepted
+    ),
+)
+def test_parse_time_rejects_bad_time_strings(given_time_string):
+    with pytest.raises(TimeError):
+        time_utils.parse_time(given_time_string)
+
+
+@pytest.mark.parametrize(
+    "given_duration_string, expected_timedelta",
+    (
+        ("0:00", datetime.timedelta()),
+        ("00:00", datetime.timedelta()),
+        ("1:23", datetime.timedelta(hours=1, minutes=23)),
+        ("01:23", datetime.timedelta(hours=1, minutes=23)),
+        ("01:23:45", datetime.timedelta(hours=1, minutes=23, seconds=45)),
+        ("8", datetime.timedelta(hours=8)),
+    ),
+)
+def test_parse_duration(given_duration_string, expected_timedelta):
+    # When parsing user input string
+    parsed_time = time_utils.parse_duration(given_duration_string)
+
+    # Then the correct time is created
+    assert parsed_time == expected_timedelta
+
+
+@pytest.mark.parametrize(
+    "given_duration_string",
+    (
+        "",
+        "000:00",  # Too many leading zeros
+        "1:23:45:67",  # Beyond second precision
+        "24:00",
+        "12:60",
+        "12:34:60",
+        "8:50am",
+        "0_05",  # Real world case that was accepted
+    ),
+)
+def test_parse_duration_rejects_bad_duration_strings(given_duration_string):
+    with pytest.raises(TimeError):
+        time_utils.parse_time(given_duration_string)

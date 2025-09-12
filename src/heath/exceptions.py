@@ -2,6 +2,10 @@ class HeathError(Exception):
     """Base exception for project"""
 
 
+class TimeError(HeathError):
+    """Base exception for time related errors"""
+
+
 class DayError(HeathError):
     """Base exception for Day"""
 
