@@ -1,7 +1,7 @@
 import datetime
-from unittest.mock import patch
 
 import pytest
+from freezegun import freeze_time
 
 from heath.day import Day
 from heath.exceptions import DayError, DayInconsistencyError
@@ -210,11 +210,7 @@ def test_overview_eight_hours_accounts_for_break_between_shifts():
     given_day.add_shift(given_shift_2)
 
     # When getting the overview at 17:05
-    fake_now = datetime.datetime(2021, 12, 6, 17, 5)
-    with patch("heath.day.datetime") as mock_datetime:
-        mock_datetime.datetime.now.return_value = fake_now
-        mock_datetime.timedelta = datetime.timedelta
-        mock_datetime.datetime.combine = datetime.datetime.combine
+    with freeze_time("2021-12-06 17:05:00"):
         overview = given_day.overview()
 
     # Then "8 timmar" should show 16:45 (when 8h was actually reached),
@@ -241,11 +237,7 @@ def test_overview_eight_hours_not_yet_reached_with_break():
     given_day.add_shift(given_shift_2)
 
     # When getting the overview at 15:00 (total worked: 4h + 1h = 5h, need 3h more)
-    fake_now = datetime.datetime(2021, 12, 6, 15, 0)
-    with patch("heath.day.datetime") as mock_datetime:
-        mock_datetime.datetime.now.return_value = fake_now
-        mock_datetime.timedelta = datetime.timedelta
-        mock_datetime.datetime.combine = datetime.datetime.combine
+    with freeze_time("2021-12-06 15:00:00"):
         overview = given_day.overview()
 
     # Then "8 timmar" should show 18:00 (15:00 + 3h remaining)
