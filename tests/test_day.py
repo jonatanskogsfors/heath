@@ -1,4 +1,5 @@
 import datetime
+from unittest.mock import patch
 
 import pytest
 
@@ -186,3 +187,66 @@ def test_project_durations_sum_completed_shifts_per_project():
     # And the projects have the expected durations
     assert project_durations[given_project_a.key] == datetime.timedelta(hours=2)
     assert project_durations[given_project_b.key] == datetime.timedelta(hours=1)
+
+
+def test_overview_eight_hours_accounts_for_break_between_shifts():
+    # Given a date
+    given_date = datetime.date(2021, 12, 6)
+
+    # Given a completed shift that covers 8 hours of work (8:00-16:45, lunch 0:45)
+    given_shift_1 = Shift(Project("ProjectX"), given_date)
+    given_shift_1.start(datetime.datetime(2021, 12, 6, 8, 0))
+    given_shift_1.lunch(datetime.timedelta(minutes=45))
+    given_shift_1.stop(datetime.datetime(2021, 12, 6, 16, 45))
+    assert given_shift_1.duration == datetime.timedelta(hours=8)
+
+    # Given an active shift starting after a 15-minute break (17:00 - ongoing)
+    given_shift_2 = Shift(Project("ProjectX"), given_date)
+    given_shift_2.start(datetime.datetime(2021, 12, 6, 17, 0))
+
+    # Given a day with both shifts
+    given_day = Day(given_date)
+    given_day.add_shift(given_shift_1)
+    given_day.add_shift(given_shift_2)
+
+    # When getting the overview at 17:05
+    fake_now = datetime.datetime(2021, 12, 6, 17, 5)
+    with patch("heath.day.datetime") as mock_datetime:
+        mock_datetime.datetime.now.return_value = fake_now
+        mock_datetime.timedelta = datetime.timedelta
+        mock_datetime.datetime.combine = datetime.datetime.combine
+        overview = given_day.overview()
+
+    # Then "8 timmar" should show 16:45 (when 8h was actually reached),
+    # not 17:00 (which ignores the break)
+    assert "16:45" in overview
+
+
+def test_overview_eight_hours_not_yet_reached_with_break():
+    # Given a date
+    given_date = datetime.date(2021, 12, 6)
+
+    # Given a completed shift of 4 hours (8:00-12:00)
+    given_shift_1 = Shift(Project("ProjectX"), given_date)
+    given_shift_1.start(datetime.datetime(2021, 12, 6, 8, 0))
+    given_shift_1.stop(datetime.datetime(2021, 12, 6, 12, 0))
+
+    # Given an active shift starting after a 2-hour break (14:00 - ongoing)
+    given_shift_2 = Shift(Project("ProjectX"), given_date)
+    given_shift_2.start(datetime.datetime(2021, 12, 6, 14, 0))
+
+    # Given a day with both shifts
+    given_day = Day(given_date)
+    given_day.add_shift(given_shift_1)
+    given_day.add_shift(given_shift_2)
+
+    # When getting the overview at 15:00 (total worked: 4h + 1h = 5h, need 3h more)
+    fake_now = datetime.datetime(2021, 12, 6, 15, 0)
+    with patch("heath.day.datetime") as mock_datetime:
+        mock_datetime.datetime.now.return_value = fake_now
+        mock_datetime.timedelta = datetime.timedelta
+        mock_datetime.datetime.combine = datetime.datetime.combine
+        overview = given_day.overview()
+
+    # Then "8 timmar" should show 18:00 (15:00 + 3h remaining)
+    assert "18:00" in overview
