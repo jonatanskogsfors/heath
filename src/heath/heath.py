@@ -2,8 +2,8 @@ import datetime
 import locale
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Optional
 
 import click
 import git
@@ -48,7 +48,7 @@ def cli(ctx, folder: Path):
         try:
             ledger.parse_month(month_file.year, month_file.month, month_file.content)
         except exceptions.HeathError as e:
-            raise exceptions.HeathError(f"Could not parse exising ledger. {e}")
+            raise exceptions.HeathError("Could not parse exising ledger.") from e
 
 
 @cli.command(help="Show ledger for year.")
@@ -78,7 +78,7 @@ def cli(ctx, folder: Path):
 @click.pass_context
 def year(
     ctx,
-    year: Optional[int],
+    year: int | None,
     include_active_day: bool,
     by_project: bool,
     by_project_total: bool,
@@ -135,8 +135,8 @@ def year(
 @click.pass_context
 def month(
     ctx,
-    month_number: Optional[int],
-    year: Optional[int],
+    month_number: int | None,
+    year: int | None,
     include_active_day: bool,
     include_comments: bool,
     by_project: bool,
@@ -261,8 +261,8 @@ def interval(
 @click.pass_context
 def week(
     ctx,
-    week_number: Optional[int],
-    year: Optional[int],
+    week_number: int | None,
+    year: int | None,
     include_active_day: bool,
     include_comments: bool,
     by_project: bool,
@@ -311,9 +311,9 @@ def week(
 @click.pass_context
 def day(
     ctx,
-    day_number: Optional[int],
-    month_number: Optional[int],
-    year_number: Optional[int],
+    day_number: int | None,
+    month_number: int | None,
+    year_number: int | None,
     include_active_shift: bool,
     include_comments: bool,
     by_project: bool,
@@ -550,9 +550,9 @@ def switch(ctx, project: str, start_time: str, dry_run: bool, verbose: bool):
 def allday(
     ctx,
     project: str,
-    day_number: Optional[int],
-    month_number: Optional[int],
-    year: Optional[int],
+    day_number: int | None,
+    month_number: int | None,
+    year: int | None,
     dry_run: bool,
     verbose: bool,
 ):
@@ -660,7 +660,7 @@ def edit(
 @cli.command(help="Commit edits to ledger repo.")
 @click.option("-m", "--commit-message", type=str, required=False)
 @click.pass_context
-def push(ctx, commit_message: Optional[str]):
+def push(ctx, commit_message: str | None):
     ledger: Ledger = ctx.obj["LEDGER"]
     folder: LedgerFolder = ctx.obj["FOLDER"]
 
@@ -731,7 +731,7 @@ def _input_bool(prompt: str, defaul_value: bool = False):
     return value
 
 
-def _input_until(prompt: str, condition: Optional[callable] = None, error_msg: str = ""):
+def _input_until(prompt: str, condition: Callable | None = None, error_msg: str = ""):
     value = input(f"{prompt}: ")
     if condition is not None:
         while not condition(value):

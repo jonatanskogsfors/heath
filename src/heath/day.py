@@ -1,6 +1,5 @@
 import datetime
 from collections import defaultdict
-from typing import Optional
 
 import tabulate
 
@@ -36,7 +35,7 @@ class Day:
         return self._shifts
 
     @property
-    def current_shift(self) -> Optional[Shift]:
+    def current_shift(self) -> Shift | None:
         if self.shifts:
             last_shift = self.shifts[-1]
             if last_shift.started and not last_shift.completed:

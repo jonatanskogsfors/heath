@@ -1,7 +1,7 @@
 import datetime
 import statistics
 from collections import defaultdict
-from typing import Collection, Optional
+from collections.abc import Collection
 
 from tabulate import tabulate
 
@@ -84,10 +84,10 @@ class TimePeriod:
         return projects
 
     @property
-    def last_day(self) -> Optional[Day]:
+    def last_day(self) -> Day | None:
         return self._days[-1] if self._days else None
 
-    def get_day(self, date_number: int) -> Optional[Day]:
+    def get_day(self, date_number: int) -> Day | None:
         requested_date = datetime.date(self.year, self.month, date_number)
         for day in self.days:
             if day.date == requested_date:

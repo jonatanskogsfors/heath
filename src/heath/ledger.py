@@ -186,7 +186,9 @@ class Ledger:
         try:
             project = self.projects[project_key]
         except KeyError:
-            raise exceptions.UnknownProjectError(f"Project {project_key} is not known.")
+            raise exceptions.UnknownProjectError(
+                f"Project {project_key} is not known."
+            ) from None
         if all_day and not project.all_day:
             raise exceptions.ProjectError(
                 f"Project {project_key} is not an all day project."

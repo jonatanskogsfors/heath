@@ -1,6 +1,5 @@
 import calendar
 import datetime
-from typing import Optional
 
 from heath.day import Day
 from heath.exceptions import (
@@ -22,7 +21,7 @@ class Month(TimePeriod):
         return f"{self.year}-{self.month:02}"
 
     @property
-    def next_work_date(self) -> Optional[datetime.date]:
+    def next_work_date(self) -> datetime.date | None:
         days_in_month = calendar.monthrange(self.year, self.month)[1]
         first_potential_day = self.days[-1].date.day + 1 if self.days else 1
         for day_number in range(first_potential_day, days_in_month + 1):
