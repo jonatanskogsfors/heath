@@ -48,6 +48,7 @@ def parse_duration(duration_string: str) -> datetime.timedelta:
             zip(
                 ("hours", "minutes", "seconds"),
                 (int(number) for number in duration_string.split(":")),
+                strict=False,
             )
         )
     )

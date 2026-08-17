@@ -1,7 +1,8 @@
 import configparser
 import io
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Self
+from typing import Self
 
 
 class Project:

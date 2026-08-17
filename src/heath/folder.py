@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Optional
 
 
 class FileObject:
@@ -25,7 +24,7 @@ class YearFile(FileObject):
     PATTERN = re.compile(r"(\d{4})\.txt")
 
     @property
-    def year(self) -> Optional[int]:
+    def year(self) -> int | None:
         if match := YearFile.PATTERN.match(self.path.name):
             return int(match.group(1))
         return None

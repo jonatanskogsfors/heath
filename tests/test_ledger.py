@@ -439,7 +439,9 @@ def test_various_day_strings_with_multiple_shifts(
     assert len(parsed_day.shifts) == len(expected_shifts)
 
     # And each shift has the correct project, start, stop, lunch and duration
-    for parsed_shift, expected_shift in zip(parsed_day.shifts, expected_shifts):
+    for parsed_shift, expected_shift in zip(
+        parsed_day.shifts, expected_shifts, strict=True
+    ):
         expected_start = (
             datetime.combine(expected_date, expected_shift[1])
             if expected_shift[1]
