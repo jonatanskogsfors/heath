@@ -8,6 +8,7 @@ from heath.shift import Shift
 from heath.time_utils import pretty_duration, pretty_time
 
 tabulate.PRESERVE_WHITESPACE = True
+EIGHT_HOURS = datetime.timedelta(hours=8)
 
 
 class Day:
@@ -88,6 +89,17 @@ class Day:
             ),
             start=datetime.timedelta(),
         )
+
+    @property
+    def full_day_time(self):
+        current_time = datetime.datetime.now().replace(second=0, microsecond=0)
+        worked_hours_difference = abs(EIGHT_HOURS - self.duration_at(current_time))
+        complete_time = (
+            current_time - worked_hours_difference
+            if self.completed
+            else current_time + worked_hours_difference
+        )
+        return complete_time
 
     def add_shift(self, shift: Shift):
         if shift.date != self.date:
@@ -209,19 +221,13 @@ class Day:
         elif self.shifts:
             current_time = datetime.datetime.now().replace(second=0, microsecond=0)
             current_duration = self.duration_at(current_time)
-            eight_hours = datetime.timedelta(hours=8)
-            day_is_finished = current_duration >= eight_hours
+            day_is_finished = current_duration >= EIGHT_HOURS
 
             # Beware of negative timedeltas
-            worked_hours_difference = abs(eight_hours - current_duration)
+            worked_hours_difference = abs(EIGHT_HOURS - current_duration)
             sign = "+" if day_is_finished else "-"
 
-            day_complete_at = (
-                current_time - worked_hours_difference
-                if day_is_finished
-                else current_time + worked_hours_difference
-            )
-
+            day_complete_at = self.full_day_time
             data = [
                 ("Starttid", pretty_time(self.start_time).rjust(5)),
                 (

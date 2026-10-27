@@ -18,6 +18,7 @@ dev = [
     "pre-commit~=4.6",
     "pytest~=9.1",
     "ruff~=0.16",
+    "freezegun~=1.5.5",
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -46,5 +47,5 @@ select = [
     "I",  # isort
     "PTH",  # flake8-use-pathlib
     "RUF",  # Ruff-specific rules
-    "UP"  # pyupgrade
+    "UP",  # pyupgrade
 ]

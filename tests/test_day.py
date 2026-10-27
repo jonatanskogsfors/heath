@@ -1,6 +1,7 @@
 import datetime
 
 import pytest
+from freezegun import freeze_time
 
 from heath.day import Day
 from heath.exceptions import DayError, DayInconsistencyError
@@ -186,3 +187,209 @@ def test_project_durations_sum_completed_shifts_per_project():
     # And the projects have the expected durations
     assert project_durations[given_project_a.key] == datetime.timedelta(hours=2)
     assert project_durations[given_project_b.key] == datetime.timedelta(hours=1)
+
+
+@pytest.mark.parametrize(
+    "given_start_time, given_lunch_time, given_current_time, expected_duration",
+    (
+        (
+            datetime.time(8),
+            datetime.timedelta(),
+            datetime.time(8, 1),
+            datetime.timedelta(minutes=1),
+        ),
+        (
+            datetime.time(8),
+            datetime.timedelta(),
+            datetime.time(9, 10, second=11),
+            datetime.timedelta(hours=1, minutes=10),
+        ),  # Seconds are ignored
+        (
+            datetime.time(8),
+            datetime.timedelta(),
+            datetime.time(7, 55),
+            datetime.timedelta(),
+        ),  # Duration is never negative
+        (
+            datetime.time(8),
+            datetime.timedelta(hours=1),
+            datetime.time(13),
+            datetime.timedelta(hours=4),
+        ),  # Lunch duration is subtracted
+        (
+            datetime.time(8),
+            datetime.timedelta(hours=1),
+            datetime.time(8, 30),
+            datetime.timedelta(),
+        ),  # Even with lunch, duration is never negative
+    ),
+)
+def test_current_duration(
+    given_start_time, given_lunch_time, given_current_time, expected_duration
+):
+    # Given a date
+    given_date = datetime.date(2026, 8, 17)
+
+    # Given a start datetime
+    given_start_datetime = datetime.datetime.combine(given_date, given_start_time)
+
+    # Given a shift started at the given time
+    given_shift = Shift(Project("ProjectX"), given_date)
+    given_shift.start(given_start_datetime)
+
+    # Given a lunch duration
+    given_shift.lunch(given_lunch_time)
+
+    # Given a day with the shift
+    given_day = Day(given_date)
+    given_day.add_shift(given_shift)
+
+    # Given a current datetime
+    given_current_datetime = datetime.datetime.combine(given_date, given_current_time)
+
+    # When looking at the duration at the current time
+    with freeze_time(given_current_datetime):
+        duration = given_day.current_duration()
+
+    # Then duration is as expected
+    assert duration == expected_duration
+
+
+@pytest.mark.parametrize(
+    "given_first_start_time, given_stop_time, given_second_start_time, given_current_time, expected_duration",
+    (
+        (
+            datetime.time(8),
+            datetime.time(12),
+            datetime.time(12),
+            datetime.time(12, 5),
+            datetime.timedelta(hours=4, minutes=5),
+        ),
+        (
+            datetime.time(8),
+            datetime.time(12),
+            datetime.time(13),
+            datetime.time(13, 5),
+            datetime.timedelta(hours=4, minutes=5),
+        ),
+        (
+            datetime.time(8),
+            datetime.time(12),
+            datetime.time(13),
+            datetime.time(12, 30),
+            datetime.timedelta(hours=4),
+        ),  # Second shift is entered but is still in the future
+    ),
+)
+def test_current_duration_with_stops(
+    given_first_start_time,
+    given_stop_time,
+    given_second_start_time,
+    given_current_time,
+    expected_duration,
+):
+    # Given a date
+    given_date = datetime.date(2026, 8, 17)
+
+    # Given a start datetime
+    given_first_start_datetime = datetime.datetime.combine(
+        given_date, given_first_start_time
+    )
+    given_stop_datetime = datetime.datetime.combine(given_date, given_stop_time)
+
+    # Given a shift started at the given time
+    given_first_shift = Shift(Project("ProjectX"), given_date)
+    given_first_shift.start(given_first_start_datetime)
+    given_first_shift.stop(given_stop_datetime)
+
+    # Given a new shift started at a given time
+    given_second_start_datetime = datetime.datetime.combine(
+        given_date, given_second_start_time
+    )
+    given_second_shift = Shift(Project("ProjectX"), given_date)
+    given_second_shift.start(given_second_start_datetime)
+
+    # Given a day with the shifts
+    given_day = Day(given_date)
+    given_day.add_shift(given_first_shift)
+    given_day.add_shift(given_second_shift)
+
+    # Given a current datetime
+    given_current_datetime = datetime.datetime.combine(given_date, given_current_time)
+
+    # When looking at the duration at the current time
+    with freeze_time(given_current_datetime):
+        duration = given_day.current_duration()
+
+    # Then duration is as expected
+    assert duration == expected_duration
+
+
+@pytest.mark.parametrize(
+    "given_first_start_time, given_stop_time, given_second_start_time, given_current_time, expected_full_day_time",
+    (
+        (
+            datetime.time(8),
+            datetime.time(15),
+            datetime.time(15),
+            datetime.time(15, 30),
+            datetime.time(16),
+        ),  # Stop without full_day_time
+        (
+            datetime.time(8),
+            datetime.time(15),
+            datetime.time(15, 30),
+            datetime.time(16),
+            datetime.time(16, 30),
+        ),  # Half hour stop
+        (
+            datetime.time(8),
+            datetime.time(15),
+            datetime.time(15, 30),
+            datetime.time(15, 20),
+            datetime.time(16, 30),
+        ),  # Second shift is entered but is still in the future
+    ),
+)
+def test_full_day_calculation_with_stops(
+    given_first_start_time,
+    given_stop_time,
+    given_second_start_time,
+    given_current_time,
+    expected_full_day_time,
+):
+    # Given a date
+    given_date = datetime.date(2026, 8, 25)
+
+    # Given a start datetime
+    given_first_start_datetime = datetime.datetime.combine(
+        given_date, given_first_start_time
+    )
+    given_stop_datetime = datetime.datetime.combine(given_date, given_stop_time)
+
+    # Given a shift started at the given time
+    given_first_shift = Shift(Project("ProjectX"), given_date)
+    given_first_shift.start(given_first_start_datetime)
+    given_first_shift.stop(given_stop_datetime)
+
+    # Given a new shift started at a given time
+    given_second_start_datetime = datetime.datetime.combine(
+        given_date, given_second_start_time
+    )
+    given_second_shift = Shift(Project("ProjectX"), given_date)
+    given_second_shift.start(given_second_start_datetime)
+
+    # Given a day with the shifts
+    given_day = Day(given_date)
+    given_day.add_shift(given_first_shift)
+    given_day.add_shift(given_second_shift)
+
+    # Given a current datetime
+    given_current_datetime = datetime.datetime.combine(given_date, given_current_time)
+
+    # When looking at the full day time at the current time
+    with freeze_time(given_current_datetime):
+        full_day_time = given_day.full_day_time
+
+    # Then full day time is as expected
+    assert full_day_time.time() == expected_full_day_time
